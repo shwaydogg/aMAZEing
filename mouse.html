@@ -1,0 +1,101 @@
+<html>
+<head>
+<title>Get Mouse Coordinates</title>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+
+  var socket = io.connect('http://localhost');
+  var name = prompt('What is your nickname?', 'Write your name');
+  var connected = false;
+
+  socket.on('connect', function () {
+  	if(!connected){
+    	socket.emit('set name', name);
+    }
+
+    socket.on('badName', function () {
+    name = prompt('That name is ALREADY in use! What is your nickname?', 'Write your name');
+      socket.emit('set name', name);
+    });
+
+    socket.on('ready', function() {
+    	connected = true;
+    });
+
+    socket.on('art',function(coord) {
+    	draw(coord.x,coord.y, 'red');
+    });
+
+  });
+
+
+
+</script>
+<script language="javascript">
+
+var socket = io.connect('http://localhost');
+
+
+
+
+var divObj;
+//http://vijayk.wordpress.com/2006/12/11/how-to-get-mouse-coordinates-with-javascript/
+/**
+* capture mousemove event, this statement will cause browser to
+* call getMouseCoordites function each time mouse moves
+*/
+document.onmousemove=getMouseCoordinates;
+
+/**
+*identify which event is supported
+* Based on that collect pageX and pageY properties of the event object
+* pageX and pageY gets the X and Y cursor coordinates
+*/
+function getMouseCoordinates(event)
+{
+ev = event || window.event;
+divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
+draw(ev.pageX,ev.pageY,'black');
+
+//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!
+socket.emit('coord',{x:ev.pageX, y:ev.pageY});  
+
+}
+
+//assign the mouseCoord Object to divObj
+function loadDiv()
+{
+divObj = document.getElementById("mouseCoord");
+}
+</script>
+
+
+</head>
+
+<body onLoad="loadDiv()">
+<div id="mouseCoord">Mouse Coordinates position will be displayed here.
+</div>
+<canvas id="can" width="200" height="200"> </canvas>
+<script type="text/javascript">
+	function draw(x,y,color){
+		var canvas = document.getElementById('can');
+		if(canvas.getContext){
+			var ctx = canvas.getContext('2d');
+			ctx.strokeStyle=color;
+			ctx.beginPath();
+			// ctx.moveTo(x, y);
+			// ctx.lineTo(x+5, y+5);
+			dot(ctx,x,y,3,color);
+			ctx.stroke();
+		}
+	}
+	draw();
+
+	function dot(ctx,x,y,rad,color){
+		ctx.arc(x,y,rad,0,2*Math.PI,false);
+		ctx.fillStyle=color;
+		ctx.fill();
+	}
+</script>
+</body>
+</html>
