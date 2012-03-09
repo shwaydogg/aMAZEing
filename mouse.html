@@ -70,14 +70,17 @@ function getMouseCoordinates(event) {
 	if(mouseDown==true) {
 		ev = event || window.event;
 		divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
+		var canvas = document.getElementById('can');
+		var x = ev.pageX - canvas.offsetLeft;
+		var y = ev.pageY - canvas.offsetTop;
 
 		if(old_xy != []) {
-	        drawContinuous(old_xy[0],old_xy[1],ev.pageX,ev.pageY,'black');
+	        drawContinuous(old_xy[0],old_xy[1],x,y,'black');
 	    }
-      	old_xy = [ev.pageX,ev.pageY];
+      	old_xy = [x,y];
 
 		//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!
-		socket.emit('coord',{x:ev.pageX, y:ev.pageY, n:name}); 
+		socket.emit('coord',{x:x, y:y, n:name}); 
 	}
 }
 
@@ -109,7 +112,6 @@ divObj = document.getElementById("mouseCoord");
 	}
 
 	function drawPoint(x,y,color){
-		var canvas = document.getElementById('can');
 		if(canvas.getContext){
 			var ctx = canvas.getContext('2d');
 			ctx.strokeStyle=color;
