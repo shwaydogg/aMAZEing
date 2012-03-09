@@ -44,6 +44,18 @@ var divObj;
 * capture mousemove event, this statement will cause browser to
 * call getMouseCoordites function each time mouse moves
 */
+
+var mouseDown = false;
+document.onmousedown=downMouse;
+document.onmouseup=upMouse;
+
+function downMouse() {
+	mouseDown = true;
+}
+function upMouse() {
+	mouseDown = false;
+}
+
 document.onmousemove=getMouseCoordinates;
 
 /**
@@ -51,15 +63,19 @@ document.onmousemove=getMouseCoordinates;
 * Based on that collect pageX and pageY properties of the event object
 * pageX and pageY gets the X and Y cursor coordinates
 */
-function getMouseCoordinates(event)
-{
-ev = event || window.event;
-divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
-draw(ev.pageX,ev.pageY,'black');
+function getMouseCoordinates(event) {
+	// 	mouseDown = true;
+	// });
+	// document.onMouseUp(function() {
+	// 	mouseDown = false;
+	if(mouseDown==true) {
+		ev = event || window.event;
+		divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
+		draw(ev.pageX,ev.pageY,'black');
 
-//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!
-socket.emit('coord',{x:ev.pageX, y:ev.pageY});  
-
+		//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!
+		socket.emit('coord',{x:ev.pageX, y:ev.pageY, n:name}); 
+	}
 }
 
 //assign the mouseCoord Object to divObj
@@ -75,7 +91,7 @@ divObj = document.getElementById("mouseCoord");
 <body onLoad="loadDiv()">
 <div id="mouseCoord">Mouse Coordinates position will be displayed here.
 </div>
-<canvas id="can" width="200" height="200"> </canvas>
+<canvas id="can" width="600" height="600"> </canvas>
 <script type="text/javascript">
 	function draw(x,y,color){
 		var canvas = document.getElementById('can');

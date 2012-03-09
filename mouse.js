@@ -1,5 +1,5 @@
-var app = require('express').createServer()
-  , io = require('socket.io').listen(app);
+var app = require('express').createServer(),
+    io = require('socket.io').listen(app);
 
 app.listen(8080);
 
@@ -37,7 +37,9 @@ io.sockets.on('connection', function (socket) {
   
   socket.on('coord', function (msgData) {
       
-      console.log('Xcoord = ', msgData.x, ' and Ycoord = ', msgData.y);
+      console.log('Xcoord = ', msgData.x, ' and Ycoord = ', msgData.y, 'and name = ', msgData.n);
+      var current_user = users[msgData.n];
+      console.log(current_user);
       socket.broadcast.emit('art',{x:msgData.x, y:msgData.y});
    
   });
