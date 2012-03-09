@@ -1,7 +1,7 @@
 var app = require('express').createServer()
   , io = require('socket.io').listen(app);
 
-app.listen(80);
+app.listen(8080);
 
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/mouse.html');
@@ -11,14 +11,19 @@ app.get('/', function (req, res) {
 
 var users= {};
 
+function User(name) {
+    this.name = name;
+}
+
 
 io.sockets.on('connection', function (socket) {
 
   socket.on('set name', function (name) {
     if(!users[name]){
-      users[name] = "notnul";
-      console.log(users);
+      // users[name] = "notnul";
+      users[name] = new User(name);
 
+      console.log(users);
       console.log(io);
       socket.emit('ready');
 
