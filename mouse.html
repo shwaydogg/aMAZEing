@@ -23,7 +23,7 @@
     });
 
     socket.on('art',function(coord) {
-    	draw(coord.x,coord.y, 'red');
+    	drawContinuous(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
     });
 
   });
@@ -39,6 +39,7 @@ var socket = io.connect('http://localhost');
 
 
 var divObj;
+var old_xy = [];
 //http://vijayk.wordpress.com/2006/12/11/how-to-get-mouse-coordinates-with-javascript/
 /**
 * capture mousemove event, this statement will cause browser to
@@ -64,14 +65,14 @@ document.onmousemove=getMouseCoordinates;
 * pageX and pageY gets the X and Y cursor coordinates
 */
 function getMouseCoordinates(event) {
-	// 	mouseDown = true;
-	// });
-	// document.onMouseUp(function() {
-	// 	mouseDown = false;
 	if(mouseDown==true) {
 		ev = event || window.event;
 		divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
-		draw(ev.pageX,ev.pageY,'black');
+
+		if(old_xy != []) {
+	        drawContinuous(old_xy[0],old_xy[1],ev.pageX,ev.pageY,'black');
+	    }
+      	old_xy = [ev.pageX,ev.pageY];
 
 		//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!
 		socket.emit('coord',{x:ev.pageX, y:ev.pageY, n:name}); 
@@ -93,25 +94,36 @@ divObj = document.getElementById("mouseCoord");
 </div>
 <canvas id="can" width="600" height="600"> </canvas>
 <script type="text/javascript">
-	function draw(x,y,color){
+	function drawContinuous(x1,y1,x2,y2,color){
 		var canvas = document.getElementById('can');
 		if(canvas.getContext){
 			var ctx = canvas.getContext('2d');
 			ctx.strokeStyle=color;
 			ctx.beginPath();
-			// ctx.moveTo(x, y);
-			// ctx.lineTo(x+5, y+5);
+			ctx.moveTo(x1,y1);
+			ctx.lineTo(x2,y2);
+			ctx.stroke();
+		}
+	}
+
+	function drawPoint(x,y,color){
+		var canvas = document.getElementById('can');
+		if(canvas.getContext){
+			var ctx = canvas.getContext('2d');
+			ctx.strokeStyle=color;
+			ctx.beginPath();
 			dot(ctx,x,y,3,color);
 			ctx.stroke();
 		}
 	}
-	draw();
 
 	function dot(ctx,x,y,rad,color){
 		ctx.arc(x,y,rad,0,2*Math.PI,false);
 		ctx.fillStyle=color;
 		ctx.fill();
 	}
+
+	drawContinuous();
 </script>
 </body>
 </html>
