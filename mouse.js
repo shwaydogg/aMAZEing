@@ -17,12 +17,19 @@ function User(name) {
     this.points = [];
 }
 
-function collide(current_point,other_user_points) {
-    for (var i in other_user_points) {
-        if(current_point.x == other_user_points[i].x && current_point.y == other_user_points[i].y) {
-            return true;
+function collide(current_point, current_user) {
+
+    for (var user in users) {
+        if(user != current_user.name) {
+            for (var i in users[user].points) {
+                var other_user_points = users[user].points;
+                if(current_point.x == other_user_points[i].x && current_point.y == other_user_points[i].y) {
+                    return true;
+                }
+            }
         }
     }
+
     return false;
 }
 
@@ -45,9 +52,8 @@ io.sockets.on('connection', function (socket) {
     socket.on('coord', function (msgData) {
         var current_user = users[msgData.n];
         var current_point = {x:msgData.x,y:msgData.y};
-
-        if (collide(current_point, current_user.points)) {
-            socket.emit('collision');
+        if (collide(current_point,current_user)) {
+            io.sockets.emit('collision');
         } else {
             current_user.points.push(current_point);
 
