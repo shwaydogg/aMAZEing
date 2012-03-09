@@ -13,7 +13,7 @@ var users= {};
 
 function User(name) {
     this.name = name;
-
+    this.old_xy = [];
 }
 
 
@@ -34,13 +34,17 @@ io.sockets.on('connection', function (socket) {
       socket.emit('badName');
     }
   });
+
+    socket.on('clear_xy', function (name) {
+      users[name].old_xy = [];
+    });
   
   socket.on('coord', function (msgData) {
       
       console.log('Xcoord = ', msgData.x, ' and Ycoord = ', msgData.y, 'and name = ', msgData.n);
       var current_user = users[msgData.n];
       console.log(current_user);
-      if(current_user.old_xy) {
+      if(current_user.old_xy != []) {
         socket.broadcast.emit('art',{x1:current_user.old_xy[0],y1:current_user.old_xy[1],x2:msgData.x, y2:msgData.y});
       }
       current_user.old_xy = [msgData.x,msgData.y];

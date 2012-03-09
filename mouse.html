@@ -55,6 +55,8 @@ function downMouse() {
 }
 function upMouse() {
 	mouseDown = false;
+	old_xy = [];
+	socket.emit('clear_xy',name);
 }
 
 document.onmousemove=getMouseCoordinates;
