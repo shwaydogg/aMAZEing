@@ -13,42 +13,51 @@ var users= {};
 
 function User(name) {
     this.name = name;
-    this.old_xy = [];
+    this.old_xy = {};
+    this.points = [];
+}
+
+function collide(current_point,other_user_points) {
+    for (var i in other_user_points) {
+        if(current_point.x == other_user_points[i].x && current_point.y == other_user_points[i].y) {
+            return true;
+        }
+    }
+    return false;
 }
 
 
 io.sockets.on('connection', function (socket) {
 
-  socket.on('set name', function (name) {
-    if(!users[name]){
-      // users[name] = "notnul";
-      users[name] = new User(name);
-
-      console.log(users);
-      console.log(io);
-      socket.emit('ready');
-
-
-    }
-    else{
-      socket.emit('badName');
-    }
-  });
+    socket.on('set name', function (name) {
+        if(!users[name]){
+          users[name] = new User(name);
+          socket.emit('ready');
+        } else {
+          socket.emit('badName');
+        }
+    });
 
     socket.on('clear_xy', function (name) {
-      users[name].old_xy = [];
+        users[name].old_xy = {};
     });
-  
-  socket.on('coord', function (msgData) {
-      
-      console.log('Xcoord = ', msgData.x, ' and Ycoord = ', msgData.y, 'and name = ', msgData.n);
-      var current_user = users[msgData.n];
-      console.log(current_user);
-      if(current_user.old_xy != []) {
-        socket.broadcast.emit('art',{x1:current_user.old_xy[0],y1:current_user.old_xy[1],x2:msgData.x, y2:msgData.y});
-      }
-      current_user.old_xy = [msgData.x,msgData.y];
-  });
+
+    socket.on('coord', function (msgData) {
+        var current_user = users[msgData.n];
+        var current_point = {x:msgData.x,y:msgData.y};
+
+        if (collide(current_point, current_user.points)) {
+            socket.emit('collision');
+        } else {
+            current_user.points.push(current_point);
+
+            if(current_user.old_xy != {}) {
+                socket.broadcast.emit('art',{x1:current_user.old_xy.x,y1:current_user.old_xy.y,x2:msgData.x, y2:msgData.y});
+            }
+
+            current_user.old_xy = current_point;
+        }
+    });
 });
 
 
