@@ -32,7 +32,7 @@ function pixelCollide(current_point, current_user) {
     return false;
 }
 
-function lineCollide(current_point, current_user) {
+function lineCollide(current_point, current_user, users) {
     var inputLine = getLine(current_point, current_user.old_xy, current_point.x);
 
 
@@ -41,29 +41,58 @@ function lineCollide(current_point, current_user) {
 
     console.log('inputLine: ', inputLine);
     console.log(' xmin and max Inputs: ', xMinInput,xMaxInput);
+    var maxUndef;
+    if(!xMinInput){
+        maxUndef = true;
+    }
 
     for (var user in users) {
+        //console.log('IN USERS  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
         if(user != current_user.name) {
+        console.log('after user if !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+
             for (var i = 0; i+1< users[user].points.length; i++){
+                //console.log('for loop!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+
                 var xMax, xMin;
 
                 xMin = users[user].points[i].x < users[user].points[i+1].x ? users[user].points[i].x : users[user].points[i+1].x;
                 xMax = users[user].points[i].x > users[user].points[i+1].x ? users[user].points[i].x : users[user].points[i+1].x;
-
+                console.log('1111111 xmin and max: ', xMin,xMax);
 
                 //check to make sure there is an overlap if not move on to next line segment
                 if (xMinInput > xMax  || xMaxInput < xMin){
+                    //console.log('being BROKEN!!!!!!!!!!!!!!!!!!!!!!!!!!!');
                     break;
                 }
+                console.log('after the break!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 
-                xMax = xMax > xMaxInput ? xMax : xMaxInput;
-                xMin = xMin < xMinInput ? xMin : xMinInput;
+                // xMax = (xMax > xMaxInput) ? xMax : xMaxInput;
+                // xMin = (xMin < xMinInput) ? xMin : xMinInput;
+
+                if(xMax > xMaxInput){
+                    xMax = xMax;
+                }
+                else{
+                    xMax = xMaxInput;
+                }
+                if(xMin < xMinInput){
+                    xMin = xMin;
+                }
+                else{
+                    xMin = xMinInput;
+                }
+
                 //we are not checking y mins and maxs that could potentially save tidbit of time.
 
                 var iterLine = getLine(users[user].points[i], users[user].points[i+1], users[user].points[i].x);
 
-
+                console.log('inputLine: ', inputLine);
+                console.log('iterLine: ', iterLine);
+                console.log(' final xmin and max: ', xMin,xMax);
+            
                 if( intersect(inputLine, iterLine, xMin, xMax) ) {
+                    console.log('line collide return true');
                     return true;
                 }
 
@@ -75,23 +104,23 @@ function lineCollide(current_point, current_user) {
 }
 
 
-console.log ('intersect({m:1, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:1, b:0}, {m:-1,b:0}, -1,1));
+// console.log ('intersect({m:1, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:1, b:0}, {m:-1,b:0}, -1,1));
 
-console.log ('intersect({m:infinity, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:Infinity, b:0}, {m:-1,b:0}, -1,1));
+// console.log ('intersect({m:infinity, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:Infinity, b:0}, {m:-1,b:0}, -1,1));
 
-console.log ('intersect({m:1, b:0}, {m:Infinity,b:0}, -1,1): ', intersect({m:1, b:0}, {m:Infinity,b:0}, -1,1));
-
-
-console.log ('intersect({m:0, b:infinity}, {m:-1,b:0}, -1,1): ', intersect({m:0, b:Infinity}, {m:-1,b:0}, -1,1));
+// console.log ('intersect({m:1, b:0}, {m:Infinity,b:0}, -1,1): ', intersect({m:1, b:0}, {m:Infinity,b:0}, -1,1));
 
 
-console.log ('intersect({m:1, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:1, b:0}, {m:-1,b:0}, -1,1));
+// console.log ('intersect({m:0, b:infinity}, {m:-1,b:0}, -1,1): ', intersect({m:0, b:Infinity}, {m:-1,b:0}, -1,1));
+
+
+// console.log ('intersect({m:1, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:1, b:0}, {m:-1,b:0}, -1,1));
 
 
 function intersect(line1, line2, xMin, xMax){
     if(line1.m == line2.m){
         if(line1.b == line2.b){
-            if(line1.m ==Infinity && line1.anX != line2.anX){
+            if( (line1.m ==Infinity || line2.m == -Infinity) && line1.anX != line2.anX){
                 return false;
             }
             return true;
@@ -99,7 +128,7 @@ function intersect(line1, line2, xMin, xMax){
         return false;
     }else{
         var xInt = xIntersect(line1,line2);
-        if(xInt > xMin && xInt <xMax){
+        if(xInt >= xMin && xInt <=xMax){
             return true;
     }
     return false;
@@ -112,8 +141,8 @@ function getLine(a,b,x){
 }
 
 function slope(a,b){
-    console.log('a.y, b.y',a.y, b.y);
-    console.log('a.x, b.x',a.x, b.x );
+    // console.log('a.y, b.y',a.y, b.y);
+    // console.log('a.x, b.x',a.x, b.x );
     return (a.y - b.y) / (a.x - b.x);
 }
 
@@ -121,7 +150,7 @@ function yIntercept(a,m){
     if(m===0){
         return a.y;
     }
-    else if(m == Infinity || m == -Infinity){
+    else if(m == Infinity || m == -Infinity){ // NaN
         return null;
     }
     return  (a.y / (m * a.x));
@@ -129,9 +158,11 @@ function yIntercept(a,m){
 
 function xIntersect(line1,line2){
     if(line1.b  === null){
+        // console.log('xIntersect reportst line1.b is null: line1: ', line1, ' line2:',line2 );
         return line1.anX;
     }
     else if(line2.b === null){
+        // console.log('xIntersect reportst line2.b is null: line1: ', line1, ' line2:',line2 );
         return line2.anX;
     }else{
         return ((line2.b - line1.b) / (line1.m - line2.m));
@@ -157,7 +188,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('coord', function (msgData) {
         var current_user = users[msgData.n];
         var current_point = {x:msgData.x,y:msgData.y};
-        if (lineCollide(current_point,current_user)) {
+        if (current_user.old_xy != {} && lineCollide(current_point,current_user,users)) {
             io.sockets.emit('collision');
         } else {
             current_user.points.push(current_point);
@@ -172,7 +203,10 @@ io.sockets.on('connection', function (socket) {
 });
 
 
-
+exports.slope = slope;
+exports.yIntercept = yIntercept;
+exports.intersect = intersect;
+exports.lineCollide = lineCollide;
 
 //https://developer.mozilla.org/en/Canvas_tutorial
 //http://stackoverflow.com/questions/4647348/send-message-to-specific-client-with-socket-io-and-node-js

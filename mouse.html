@@ -23,7 +23,8 @@
     });
 
     socket.on('art',function(coord) {
-    	drawContinuous(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
+    	 drawContinuous(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
+    	//drawPoint(coord.x2,coord.y2,'red');
     });
 
     socket.on('collision', function() {
@@ -63,7 +64,35 @@ function upMouse() {
 	socket.emit('clear_xy',name);
 }
 
-document.onmousemove=getMouseCoordinates;
+var inputMode = 'line'; //||'drag'
+if(inputMode == 'drag'){
+	document.onmousemove=getMouseCoordinates;
+}
+else if(inputMode == 'line'){
+	document.onmouseup=getLineMouseCoordinates;
+}
+
+function getLineMouseCoordinates(event) {
+	
+		ev = event || window.event;
+		divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
+
+		// offset calculation needs to change once there are other elements on the page
+		// see quirksmode.org/js/findpos.html for details
+		var canvas = document.getElementById('can');
+		var x = ev.pageX - canvas.offsetLeft;
+		var y = ev.pageY - canvas.offsetTop;
+
+		if(old_xy != []) {
+	        drawContinuous(old_xy[0],old_xy[1],x,y,'black');
+	    }
+      	old_xy = [x,y];
+
+		//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!
+		socket.emit('coord',{x:x, y:y, n:name}); 
+
+}
+
 
 /**
 *identify which event is supported
@@ -106,8 +135,8 @@ divObj = document.getElementById("mouseCoord");
 </div>
 <canvas id="can" width="600" height="600"> </canvas>
 <script type="text/javascript">
+	var canvas = document.getElementById('can');
 	function drawContinuous(x1,y1,x2,y2,color){
-		var canvas = document.getElementById('can');
 		if(canvas.getContext){
 			var ctx = canvas.getContext('2d');
 			ctx.strokeStyle=color;
