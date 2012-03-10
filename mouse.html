@@ -64,7 +64,7 @@ function upMouse() {
 	socket.emit('clear_xy',name);
 }
 
-var inputMode = 'line'; //||'drag'
+var inputMode = 'line'; // 'drag' means pretty drawing, 'line' means click and get next line segment
 if(inputMode == 'drag'){
 	document.onmousemove=getMouseCoordinates;
 }
