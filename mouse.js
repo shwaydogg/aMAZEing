@@ -33,69 +33,23 @@ function pixelCollide(current_point, current_user) {
 }
 
 function lineCollide(current_point, current_user, users) {
-    var inputLine = getLine(current_point, current_user.old_xy, current_point.x);
-
-
-    var xMinInput = current_point.x  < current_user.old_xy.x ? current_point.x : current_user.old_xy.x;
-    var xMaxInput = current_point.x  > current_user.old_xy.x ? current_point.x : current_user.old_xy.x;
-
-    console.log('inputLine: ', inputLine);
-    console.log(' xmin and max Inputs: ', xMinInput,xMaxInput);
-    var maxUndef;
-    if(!xMinInput){
-        maxUndef = true;
-    }
+    var inputLine = [current_point, current_user.old_xy];
 
     for (var user in users) {
-        //console.log('IN USERS  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
         if(user != current_user.name) {
-        console.log('after user if !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-
             for (var i = 0; i+1< users[user].points.length; i++){
-                //console.log('for loop!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 
-                var xMax, xMin;
+                var iterLine = [users[user].points[i], users[user].points[i+1]];
 
-                xMin = users[user].points[i].x < users[user].points[i+1].x ? users[user].points[i].x : users[user].points[i+1].x;
-                xMax = users[user].points[i].x > users[user].points[i+1].x ? users[user].points[i].x : users[user].points[i+1].x;
-                console.log('1111111 xmin and max: ', xMin,xMax);
-
-                //check to make sure there is an overlap if not move on to next line segment
-                if (xMinInput > xMax  || xMaxInput < xMin){
-                    //console.log('being BROKEN!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-                    break;
-                }
-                console.log('after the break!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-
-                // xMax = (xMax > xMaxInput) ? xMax : xMaxInput;
-                // xMin = (xMin < xMinInput) ? xMin : xMinInput;
-
-                if(xMax > xMaxInput){
-                    xMax = xMax;
-                }
-                else{
-                    xMax = xMaxInput;
-                }
-                if(xMin < xMinInput){
-                    xMin = xMin;
-                }
-                else{
-                    xMin = xMinInput;
-                }
-
-                //we are not checking y mins and maxs that could potentially save tidbit of time.
-
-                var iterLine = getLine(users[user].points[i], users[user].points[i+1], users[user].points[i].x);
-
-                console.log('inputLine: ', inputLine);
-                console.log('iterLine: ', iterLine);
-                console.log(' final xmin and max: ', xMin,xMax);
-            
-                if( intersect(inputLine, iterLine, xMin, xMax) ) {
+                if( boeIntersect(inputLine, iterLine) ) {
                     console.log('line collide return true');
                     return true;
                 }
-
+ 
+                // if( intersect(inputLine, iterLine, xMin, xMax) ) {
+                //     console.log('line collide return true');
+                //     return true;
+                // }
 
             }
         }
@@ -103,18 +57,17 @@ function lineCollide(current_point, current_user, users) {
     return false;
 }
 
+function boeIntersect(line1,line2) {
+    return(
+        (counterClockwise(line1[0], line2[0],line1[1]) != counterClockwise(line1[1], line2[0],line1[1])) && (counterClockwise(line1[0], line2[0],line1[0]) != counterClockwise(line1[0], line2[0],line1[1]))
+        );
+}
 
-// console.log ('intersect({m:1, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:1, b:0}, {m:-1,b:0}, -1,1));
-
-// console.log ('intersect({m:infinity, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:Infinity, b:0}, {m:-1,b:0}, -1,1));
-
-// console.log ('intersect({m:1, b:0}, {m:Infinity,b:0}, -1,1): ', intersect({m:1, b:0}, {m:Infinity,b:0}, -1,1));
-
-
-// console.log ('intersect({m:0, b:infinity}, {m:-1,b:0}, -1,1): ', intersect({m:0, b:Infinity}, {m:-1,b:0}, -1,1));
-
-
-// console.log ('intersect({m:1, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:1, b:0}, {m:-1,b:0}, -1,1));
+function counterClockwise(point1,point2,point3){
+    var slope_1_2 = (point3.y - point1.y) * (point2.x - point1.x);
+    var slope_1_3 = (point2.y - point1.y) * (point3.x - point1.x);
+    return(slope_1_2 > slope_1_3);
+}
 
 
 function intersect(line1, line2, xMin, xMax){
