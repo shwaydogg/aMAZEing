@@ -33,111 +33,85 @@ function pixelCollide(current_point, current_user) {
 }
 
 function lineCollide(current_point, current_user, users) {
-    var inputLine = getLine(current_point, current_user.old_xy, current_point.x);
-
-
-    var xMinInput = current_point.x  < current_user.old_xy.x ? current_point.x : current_user.old_xy.x;
-    var xMaxInput = current_point.x  > current_user.old_xy.x ? current_point.x : current_user.old_xy.x;
-
-    console.log('inputLine: ', inputLine);
-    console.log(' xmin and max Inputs: ', xMinInput,xMaxInput);
-    var maxUndef;
-    if(!xMinInput){
-        maxUndef = true;
-    }
-
+    var inputLine = [current_point, current_user.old_xy];
     for (var user in users) {
-        //console.log('IN USERS  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
         if(user != current_user.name) {
-        console.log('after user if !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-
             for (var i = 0; i+1< users[user].points.length; i++){
-                //console.log('for loop!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 
-                var xMax, xMin;
+                var iterLine = [users[user].points[i], users[user].points[i+1]];
 
-                xMin = users[user].points[i].x < users[user].points[i+1].x ? users[user].points[i].x : users[user].points[i+1].x;
-                xMax = users[user].points[i].x > users[user].points[i+1].x ? users[user].points[i].x : users[user].points[i+1].x;
-                console.log('1111111 xmin and max: ', xMin,xMax);
-
-                //check to make sure there is an overlap if not move on to next line segment
-                if (xMinInput > xMax  || xMaxInput < xMin){
-                    //console.log('being BROKEN!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-                    break;
-                }
-                console.log('after the break!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-
-                // xMax = (xMax > xMaxInput) ? xMax : xMaxInput;
-                // xMin = (xMin < xMinInput) ? xMin : xMinInput;
-
-                if(xMax > xMaxInput){
-                    xMax = xMax;
-                }
-                else{
-                    xMax = xMaxInput;
-                }
-                if(xMin < xMinInput){
-                    xMin = xMin;
-                }
-                else{
-                    xMin = xMinInput;
-                }
-
-                //we are not checking y mins and maxs that could potentially save tidbit of time.
-
-                var iterLine = getLine(users[user].points[i], users[user].points[i+1], users[user].points[i].x);
-
-                console.log('inputLine: ', inputLine);
-                console.log('iterLine: ', iterLine);
-                console.log(' final xmin and max: ', xMin,xMax);
-            
-                if( intersect(inputLine, iterLine, xMin, xMax) ) {
+                if( boeIntersect(inputLine, iterLine) ) {
                     console.log('line collide return true');
                     return true;
                 }
-
-
+ 
             }
         }
     }
     return false;
 }
 
+function boeIntersect(line1,line2) {
 
-// console.log ('intersect({m:1, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:1, b:0}, {m:-1,b:0}, -1,1));
+    var line1Specs = getLineSpecs(line1);
+    var line2Specs = getLineSpecs(line2);
 
-// console.log ('intersect({m:infinity, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:Infinity, b:0}, {m:-1,b:0}, -1,1));
-
-// console.log ('intersect({m:1, b:0}, {m:Infinity,b:0}, -1,1): ', intersect({m:1, b:0}, {m:Infinity,b:0}, -1,1));
-
-
-// console.log ('intersect({m:0, b:infinity}, {m:-1,b:0}, -1,1): ', intersect({m:0, b:Infinity}, {m:-1,b:0}, -1,1));
-
-
-// console.log ('intersect({m:1, b:0}, {m:-1,b:0}, -1,1): ', intersect({m:1, b:0}, {m:-1,b:0}, -1,1));
-
-
-function intersect(line1, line2, xMin, xMax){
-    if(line1.m == line2.m){
-        if(line1.b == line2.b){
-            if( (line1.m ==Infinity || line2.m == -Infinity) && line1.anX != line2.anX){
-                return false;
-            }
-            return true;
+    if(line1Specs.m == line2Specs.m && line1Specs.b == line2Specs.b ) {
+        // vertical lines with different x-coordinates can't collide
+        if( (line1Specs.m == Infinity || line2Specs.m == -Infinity) && line1Specs.anX != line2Specs.anX){
+            return false;
         }
-        return false;
-    }else{
-        var xInt = xIntersect(line1,line2);
-        if(xInt >= xMin && xInt <=xMax){
-            return true;
+        // any other lines with the same slope and same y-intercept should collide
+        return true;
     }
-    return false;
+
+    // return true if either endpoint of one line segment is on the other line segment
+    if(pointsOnLineSeg(line1,line2,line2Specs) || pointsOnLineSeg(line2,line1,line1Specs)) {
+        return true;
     }
+
+    return(
+        (counterClockwise(line1[0], line2[0],line1[1]) != counterClockwise(line1[1], line2[0],line1[1])) && (counterClockwise(line1[0], line2[0],line1[0]) != counterClockwise(line1[0], line2[0],line1[1]))
+        );
 }
 
-function getLine(a,b,x){
-    var m = slope(a,b);
-    return {m:m, b: yIntercept(a,m), anX:x};
+function pointsOnLineSeg(line1,line2,line2Specs) {
+    // check whether either endpoint of one line segment is on the other line
+    onLine = pointOnLine(line1[0],line2,line2Specs) || pointOnLine(line1[1],line2,line2Specs);
+    // check whether either endpoint is on the line segment, not just the line in its entirety
+    onLineSeg = xInRange(line1[0],line2) && xInRange(line1[1],line2);
+    if( onLine && onLineSeg ) {
+        return true;
+    }
+    return false;
+}
+
+function xInRange(point,line){
+    var lineXMax;
+    var lineXMin;
+    if(line[0].x > line[1].x) {
+        lineXMax = line[0].x;
+        lineXMin = line[1].x;
+    } else {
+        lineXMax = line[1].x;
+        lineXMin = line[0].x;
+    }
+    return(point.x > lineXMin && point.x < lineXMax);
+}
+
+function pointOnLine(point,line,lineSpecs) {
+    return(line.y == (lineSpecs.m * line.x) + lineSpecs.b);
+}
+
+function counterClockwise(point1,point2,point3){
+    var slope_1_2 = (point3.y - point1.y) * (point2.x - point1.x);
+    var slope_1_3 = (point2.y - point1.y) * (point3.x - point1.x);
+    return(slope_1_2 > slope_1_3);
+}
+
+function getLineSpecs(line){
+    var m = slope(line[0],line[1]);
+    return {m:m, b: yIntercept(line[0],m), anX:line[0].x};
 }
 
 function slope(a,b){
