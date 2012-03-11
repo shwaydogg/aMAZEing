@@ -66,7 +66,7 @@ function boeIntersect(line1,line2) {
     }
 
     // return true if either endpoint of one line segment is on the other line segment
-    if(endpointsOnLine(line1,line2Specs) || endpointsOnLine(line2,line1Specs)) {
+    if(pointsOnLineSeg(line1,line2,line2Specs) || pointsOnLineSeg(line2,line1,line1Specs)) {
         return true;
     }
 
@@ -75,12 +75,32 @@ function boeIntersect(line1,line2) {
         );
 }
 
-function endpointsOnLine(line1,line2Specs) {
-    // check whether either endpoint of one line segment is on the other line segment
-    if( (line1[0].y == (line2Specs.m * line1[0].x) + line2Specs.b) || (line1[1].y == (line2Specs.m * line1[1].x) + line2Specs.b) ) {
+function pointsOnLineSeg(line1,line2,line2Specs) {
+    // check whether either endpoint of one line segment is on the other line
+    onLine = pointOnLine(line1[0],line2,line2Specs) || pointOnLine(line1[1],line2,line2Specs);
+    // check whether either endpoint is on the line segment, not just the line in its entirety
+    onLineSeg = xInRange(line1[0],line2) && xInRange(line1[1],line2);
+    if( onLine && onLineSeg ) {
         return true;
     }
     return false;
+}
+
+function xInRange(point,line){
+    var lineXMax;
+    var lineXMin;
+    if(line[0].x > line[1].x) {
+        lineXMax = line[0].x;
+        lineXMin = line[1].x;
+    } else {
+        lineXMax = line[1].x;
+        lineXMin = line[0].x;
+    }
+    return(point.x > lineXMin && point.x < lineXMax);
+}
+
+function pointOnLine(point,line,lineSpecs) {
+    return(line.y == (lineSpecs.m * line.x) + lineSpecs.b);
 }
 
 function counterClockwise(point1,point2,point3){
