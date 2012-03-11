@@ -34,7 +34,6 @@ function pixelCollide(current_point, current_user) {
 
 function lineCollide(current_point, current_user, users) {
     var inputLine = [current_point, current_user.old_xy];
-
     for (var user in users) {
         if(user != current_user.name) {
             for (var i = 0; i+1< users[user].points.length; i++){
@@ -46,11 +45,6 @@ function lineCollide(current_point, current_user, users) {
                     return true;
                 }
  
-                // if( intersect(inputLine, iterLine, xMin, xMax) ) {
-                //     console.log('line collide return true');
-                //     return true;
-                // }
-
             }
         }
     }
@@ -58,9 +52,35 @@ function lineCollide(current_point, current_user, users) {
 }
 
 function boeIntersect(line1,line2) {
+
+    var line1Specs = getLineSpecs(line1);
+    var line2Specs = getLineSpecs(line2);
+
+    if(line1Specs.m == line2Specs.m && line1Specs.b == line2Specs.b ) {
+        // vertical lines with different x-coordinates can't collide
+        if( (line1Specs.m == Infinity || line2Specs.m == -Infinity) && line1Specs.anX != line2Specs.anX){
+            return false;
+        }
+        // any other lines with the same slope and same y-intercept should collide
+        return true;
+    }
+
+    // return true if either endpoint of one line segment is on the other line segment
+    if(endpointsOnLine(line1,line2Specs) || endpointsOnLine(line2,line1Specs)) {
+        return true;
+    }
+
     return(
         (counterClockwise(line1[0], line2[0],line1[1]) != counterClockwise(line1[1], line2[0],line1[1])) && (counterClockwise(line1[0], line2[0],line1[0]) != counterClockwise(line1[0], line2[0],line1[1]))
         );
+}
+
+function endpointsOnLine(line1,line2Specs) {
+    // check whether either endpoint of one line segment is on the other line segment
+    if( (line1[0].y == (line2Specs.m * line1[0].x) + line2Specs.b) || (line1[1].y == (line2Specs.m * line1[1].x) + line2Specs.b) ) {
+        return true;
+    }
+    return false;
 }
 
 function counterClockwise(point1,point2,point3){
@@ -69,28 +89,9 @@ function counterClockwise(point1,point2,point3){
     return(slope_1_2 > slope_1_3);
 }
 
-
-function intersect(line1, line2, xMin, xMax){
-    if(line1.m == line2.m){
-        if(line1.b == line2.b){
-            if( (line1.m ==Infinity || line2.m == -Infinity) && line1.anX != line2.anX){
-                return false;
-            }
-            return true;
-        }
-        return false;
-    }else{
-        var xInt = xIntersect(line1,line2);
-        if(xInt >= xMin && xInt <=xMax){
-            return true;
-    }
-    return false;
-    }
-}
-
-function getLine(a,b,x){
-    var m = slope(a,b);
-    return {m:m, b: yIntercept(a,m), anX:x};
+function getLineSpecs(line){
+    var m = slope(line[0],line[1]);
+    return {m:m, b: yIntercept(line[0],m), anX:line[0].x};
 }
 
 function slope(a,b){
