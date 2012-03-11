@@ -64,7 +64,12 @@ function upMouse() {
 	socket.emit('clear_xy',name);
 }
 
-var inputMode = 'line'; //||'drag'
+var inputMode = 'drag'; //'drag'||'line'
+
+function setMode(mode) {
+	inputMode = mode;
+}
+
 if(inputMode == 'drag'){
 	document.onmousemove=getMouseCoordinates;
 }
@@ -125,6 +130,8 @@ function loadDiv()
 {
 divObj = document.getElementById("mouseCoord");
 }
+
+
 </script>
 
 
@@ -134,6 +141,10 @@ divObj = document.getElementById("mouseCoord");
 <div id="mouseCoord">Mouse Coordinates position will be displayed here.
 </div>
 <canvas id="can" width="600" height="600"> </canvas>
+
+<button onclick="setMode('drag') ">Input Drag</button>
+<button onclick="setMode('line') ">Input Line</button>
+
 <script type="text/javascript">
 	var canvas = document.getElementById('can');
 	function drawContinuous(x1,y1,x2,y2,color){
