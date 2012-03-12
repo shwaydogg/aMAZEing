@@ -177,8 +177,10 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('clear_xy', function (name) {
-        users[name].old_xy = {};
-        users[name].points[ users[name].points.length - 1 ].end = true;
+        if(users[name]) {
+            users[name].old_xy = {};
+            users[name].points[ users[name].points.length - 1 ].end = true;
+        }
     });
 
     socket.on('coord', function (msgData) {
