@@ -1,7 +1,7 @@
 var app = require('express').createServer(),
     io = require('socket.io').listen(app);
 
-app.listen(47430); //47430 for heroku, 8080 for localhost
+app.listen(8080);
 
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/mouse.html');
