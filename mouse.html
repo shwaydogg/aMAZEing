@@ -32,7 +32,7 @@
     	console.log("An opponent has joined your game at last!");
     });
 
-    socket.on('art',function(coord) {
+    socket.on('drawLine',function(coord) {
     	 drawContinuous(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
     	//drawPoint(coord.x2,coord.y2,'red');
     });
@@ -132,6 +132,8 @@ function getMouseCoordinates(event) {
 		if(old_xy != []) {
 	        drawContinuous(old_xy[0],old_xy[1],x,y,'black');
 	    }
+
+
       	old_xy = [x,y];
 
 		//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!

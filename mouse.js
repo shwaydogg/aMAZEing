@@ -39,11 +39,13 @@ function lineCollide(current_point, current_user, users) {
         if(user != current_user.name) {
             io.sockets.socket(users[user].id).emit('Looking at you, kid');
             for (var i = 0; i+1< users[user].points.length; i++){
-                var iterLine = [users[user].points[i], users[user].points[i+1]];
-                if( boeIntersect(inputLine, iterLine) ) {
-                    return true;
+                var firstPoint = users[user].points[i];
+                if(!firstPoint.end){
+                    var iterLine = [ firstPoint, users[user].points[i+1]];
+                    if( boeIntersect(inputLine, iterLine) ) {
+                        return true;
+                    }
                 }
- 
             }
         }
     }
@@ -105,7 +107,7 @@ function getLineSpecs(line){
     var m = slope(line[0],line[1]);
     return {m:m, b: yIntercept(line[0],m), anX:line[0].x};
 }
-
+ 
 function slope(a,b){
     return (a.y - b.y) / (a.x - b.x);
 }
@@ -167,6 +169,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('clear_xy', function (name) {
         users[name].old_xy = {};
+        users[name].points[ users[name].points.length - 1 ].end = true;
     });
 
     socket.on('coord', function (msgData) {
@@ -178,7 +181,7 @@ io.sockets.on('connection', function (socket) {
             current_user.points.push(current_point);
 
             if(current_user.old_xy != {}) {
-                socket.broadcast.emit('art',{x1:current_user.old_xy.x,y1:current_user.old_xy.y,x2:msgData.x, y2:msgData.y});
+                socket.broadcast.emit('drawLine',{x1:current_user.old_xy.x,y1:current_user.old_xy.y,x2:msgData.x, y2:msgData.y});
             }
 
             current_user.old_xy = current_point;
