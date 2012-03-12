@@ -11,8 +11,9 @@ app.get('/', function (req, res) {
 
 var users= {};
 
-function User(name) {
+function User(name,id) {
     this.name = name;
+    this.id = id;
     this.old_xy = {};
     this.points = [];
 }
@@ -36,6 +37,7 @@ function lineCollide(current_point, current_user, users) {
     var inputLine = [current_point, current_user.old_xy];
     for (var user in users) {
         if(user != current_user.name) {
+            io.sockets.socket(users[user].id).emit('Looking at you, kid');
             for (var i = 0; i+1< users[user].points.length; i++){
                 var iterLine = [users[user].points[i], users[user].points[i+1]];
                 if( boeIntersect(inputLine, iterLine) ) {
@@ -135,10 +137,31 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('set name', function (name) {
         if(!users[name]){
-          users[name] = new User(name);
-          socket.emit('ready');
+            users[name] = new User(name,socket.id);
+            var rooms = io.sockets.manager.rooms;
+            var inGame = false;
+            for (var room in rooms) {
+                // check to see if there are any rooms waiting for a second player, and if so, join one
+                console.log('room key is: ', room);
+                var clients = rooms[room];
+                console.log('the clients in this room are: ', clients);
+                if (room !== '' && clients.length == 1) {
+                    socket.join(room.slice(1));
+                    console.log('in theory, you just joined this room: ', room);
+                    socket.emit('inGame');
+                    io.sockets.socket(io.sockets.manager.rooms[room][0]).emit('newPlayer');
+                    console.log('now the rooms are: ', io.sockets.manager.rooms);
+                    inGame = true;
+                }
+            }
+            if (!inGame) {
+                // if there are no rooms waiting for a second player, create a new room and wait in it
+                socket.join(name);
+                console.log('you just created and joined this room: ', io.sockets.clients(name));
+                socket.emit('ready');
+            }
         } else {
-          socket.emit('badName');
+            socket.emit('badName');
         }
     });
 
