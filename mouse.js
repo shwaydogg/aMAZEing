@@ -1,3 +1,5 @@
+require.paths.unshift('.');
+
 var app = require('express').createServer(),
     io = require('socket.io').listen(app);
 
