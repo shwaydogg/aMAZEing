@@ -188,7 +188,7 @@ io.sockets.on('connection', function (socket) {
             current_user.points.push(current_point);
 
             if(current_user.old_xy != {}) {
-                io.sockets.socket(current_user.other_player_id).emit('drawLine',{x1:current_user.old_xy.x,y1:current_user.old_xy.y,x2:current_point.x, y2:current_point.y});
+                io.sockets.socket(current_user.other_player_id).emit('drawLine',{x1:current_user.old_xy.x,y1:current_user.old_xy.y,x2:msgData.x, y2:msgData.y});
             }
 
             current_user.old_xy = current_point;
