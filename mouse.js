@@ -96,7 +96,7 @@ function pointOnLine(point,lineSpecs) {
 function xInRange(point,line){
     var xMax = (line[0].x > line[1].x) ? line[0].x : line[1].x;
     var xMin = (line[0].x < line[1].x) ? line[0].x : line[1].x;
-    return(point.x > xMin && point.x < xMax);
+    return(point.x >= xMin && point.x <= xMax);
 }
 
 function getLineSpecs(line){
