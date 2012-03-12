@@ -20,6 +20,16 @@
 
     socket.on('ready', function() {
     	connected = true;
+    	console.log("Please be patient; you'll be able to play as soon as an opponent arrives and joins your game!");
+    });
+
+    socket.on('inGame', function() {
+    	connected = true;
+    	console.log("You've joined a game!");
+    });
+
+    socket.on('newPlayer', function() {
+    	console.log("An opponent has joined your game at last!");
     });
 
     socket.on('art',function(coord) {
@@ -30,6 +40,10 @@
     socket.on('collision', function() {
     	console.log("Collision! Doooooooom! Woe.");
     });
+
+    socket.on('Looking at you, kid', function() {
+    	console.log("Received a private message");
+    })
 
   });
 
