@@ -14,6 +14,8 @@ var users= {};
 function User(name,id) {
     this.name = name;
     this.id = id;
+    this.room = "";
+    this.mazeWriter = true;
     this.old_xy = {};
     this.points = [];
 }
@@ -37,7 +39,6 @@ function lineCollide(current_point, current_user, users) {
     var inputLine = [current_point, current_user.old_xy];
     for (var user in users) {
         if(user != current_user.name) {
-            io.sockets.socket(users[user].id).emit('Looking at you, kid');
             for (var i = 0; i+1< users[user].points.length; i++){
                 var iterLine = [users[user].points[i], users[user].points[i+1]];
                 if( boeIntersect(inputLine, iterLine) ) {
@@ -138,31 +139,37 @@ io.sockets.on('connection', function (socket) {
     socket.on('set name', function (name) {
         if(!users[name]){
             users[name] = new User(name,socket.id);
+            var current_user = users[name];
             var rooms = io.sockets.manager.rooms;
             var inGame = false;
             for (var room in rooms) {
                 // check to see if there are any rooms waiting for a second player, and if so, join one
-                console.log('room key is: ', room);
                 var clients = rooms[room];
-                console.log('the clients in this room are: ', clients);
                 if (room !== '' && clients.length == 1) {
-                    socket.join(room.slice(1));
-                    console.log('in theory, you just joined this room: ', room);
+                    socket.join(room.slice(1)); // have to slice because join adds an extra '/' at the beginning
+                    current_user.room = room.slice(1);
+                    current_user.mazeWriter = false; // set the second player to join the game to be the traverser, not the writer
+                    current_user.other_player_id = io.sockets.manager.rooms[room][0];
                     socket.emit('inGame');
-                    io.sockets.socket(io.sockets.manager.rooms[room][0]).emit('newPlayer');
-                    console.log('now the rooms are: ', io.sockets.manager.rooms);
+                    io.sockets.socket(current_user.other_player_id).emit('newPlayer', current_user.id);
                     inGame = true;
                 }
             }
             if (!inGame) {
                 // if there are no rooms waiting for a second player, create a new room and wait in it
                 socket.join(name);
-                console.log('you just created and joined this room: ', io.sockets.clients(name));
+                current_user.room = name;
                 socket.emit('ready');
             }
         } else {
             socket.emit('badName');
         }
+    });
+
+    socket.on('setOtherPlayer', function (msgData){
+        var current_user = users[msgData.n];
+        current_user.other_player_id = msgData.otherID;
+        console.log(current_user.name, ' has user ID ', current_user.id, 'and is playing against a user with ID: ', current_user.other_player_id);
     });
 
     socket.on('clear_xy', function (name) {
@@ -173,12 +180,12 @@ io.sockets.on('connection', function (socket) {
         var current_user = users[msgData.n];
         var current_point = {x:msgData.x,y:msgData.y};
         if (current_user.old_xy != {} && lineCollide(current_point,current_user,users)) {
-            io.sockets.emit('collision');
+            io.sockets.in(current_user.room).emit('collision');
         } else {
             current_user.points.push(current_point);
 
             if(current_user.old_xy != {}) {
-                socket.broadcast.emit('art',{x1:current_user.old_xy.x,y1:current_user.old_xy.y,x2:msgData.x, y2:msgData.y});
+                io.sockets.socket(current_user.other_player_id).emit('art',{x1:current_user.old_xy.x,y1:current_user.old_xy.y,x2:msgData.x, y2:msgData.y});
             }
 
             current_user.old_xy = current_point;
