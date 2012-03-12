@@ -16,6 +16,6 @@
     } 
   ],
   "scripts": {
-    "start": "node mouse.js",
+    "start": "node mouse.js"
   }
 }
