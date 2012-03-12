@@ -41,10 +41,6 @@
     	//drawPoint(coord.x2,coord.y2,'red');
     });
 
-    socket.on('collision', function() {
-    	console.log("Collision! Doooooooom! Woe.");
-    });
-
   });
 
 
@@ -67,7 +63,7 @@ var old_xy = [];
 
 var mouseDown = false;
 document.onmousedown=downMouse;
-document.onmouseup=upMouse;
+document.onmouseup=upMouse();
 
 function downMouse() {
 	mouseDown = true;
@@ -131,15 +127,19 @@ function getMouseCoordinates(event) {
 		var x = ev.pageX - canvas.offsetLeft;
 		var y = ev.pageY - canvas.offsetTop;
 
-		if(old_xy != []) {
-	        drawContinuous(old_xy[0],old_xy[1],x,y,'black');
-	    }
-
-
-      	old_xy = [x,y];
-
 		//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!
-		socket.emit('coord',{x:x, y:y, n:name}); 
+		socket.emit('coord',{x:x, y:y, old_xy:old_xy, n:name}); 
+
+		socket.on('collision', function(msgData) {
+	    	if(msgData.collide){
+		    	console.log("Collision! Doooooooom! Woe.");
+		    } else {
+		    	if(msgData.old_xy != []) {
+			        drawContinuous(msgData.old_xy[0],msgData.old_xy[1],msgData.current_point[0],msgData.current_point[1],'black');
+			    } 	
+			    old_xy = [msgData.current_point[0],msgData.current_point[1]];
+		    }
+	    });
 	}
 }
 
