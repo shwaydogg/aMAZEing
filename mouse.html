@@ -7,6 +7,7 @@
   var socket = io.connect('http://localhost');
   var name = prompt('What is your nickname?', 'Write your name');
   var connected = false;
+  var mazeWriter = true;
 
   socket.on('connect', function () {
   	if(!connected){
@@ -25,11 +26,14 @@
 
     socket.on('inGame', function() {
     	connected = true;
+    	mazeWriter = false; // set the second player to join a game to be the maze traverser, not the maze writer
     	console.log("You've joined a game!");
     });
 
-    socket.on('newPlayer', function() {
+    socket.on('newPlayer', function(id) {
     	console.log("An opponent has joined your game at last!");
+    	socket.emit('setOtherPlayer', {n:name, otherID:id});
+    	clearCanvas();
     });
 
     socket.on('drawLine',function(coord) {
@@ -40,10 +44,6 @@
     socket.on('collision', function() {
     	console.log("Collision! Doooooooom! Woe.");
     });
-
-    socket.on('Looking at you, kid', function() {
-    	console.log("Received a private message");
-    })
 
   });
 
@@ -73,9 +73,11 @@ function downMouse() {
 	mouseDown = true;
 }
 function upMouse() {
-	mouseDown = false;
-	old_xy = [];
-	socket.emit('clear_xy',name);
+	if(mazeWriter) {
+		mouseDown = false;
+		old_xy = [];
+		socket.emit('clear_xy',name);
+	}
 }
 
 var inputMode = 'drag'; //'drag'||'line'
@@ -188,6 +190,13 @@ divObj = document.getElementById("mouseCoord");
 		ctx.arc(x,y,rad,0,2*Math.PI,false);
 		ctx.fillStyle=color;
 		ctx.fill();
+	}
+
+	function clearCanvas(){
+		if(canvas.getContext){
+			var ctx = canvas.getContext('2d');
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+		}
 	}
 
 	drawContinuous();
