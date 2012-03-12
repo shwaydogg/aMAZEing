@@ -15,7 +15,7 @@ function User(name,id) {
     this.name = name;
     this.id = id;
     this.room = "";
-    this.mazeWriter = true;
+    this.mazeWriter = false;
     this.old_xy = {};
     this.points = [];
 }
@@ -150,7 +150,7 @@ io.sockets.on('connection', function (socket) {
                 if (room !== '' && clients.length == 1) {
                     socket.join(room.slice(1)); // have to slice because join adds an extra '/' at the beginning
                     current_user.room = room.slice(1);
-                    current_user.mazeWriter = false; // set the second player to join the game to be the traverser, not the writer
+                    current_user.mazeWriter = true; // set the second player to join the game to be the writer, not the traverser
                     current_user.other_player_id = io.sockets.manager.rooms[room][0];
                     socket.emit('inGame');
                     io.sockets.socket(current_user.other_player_id).emit('newPlayer', current_user.id);
@@ -171,6 +171,8 @@ io.sockets.on('connection', function (socket) {
     socket.on('setOtherPlayer', function (msgData){
         var current_user = users[msgData.n];
         current_user.other_player_id = msgData.otherID;
+        current_user.points = [];
+        current_user.old_xy = {};
         console.log(current_user.name, ' has user ID ', current_user.id, 'and is playing against a user with ID: ', current_user.other_player_id);
     });
 

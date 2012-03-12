@@ -7,7 +7,7 @@
   var socket = io.connect('http://localhost');
   var name = prompt('What is your nickname?', 'Write your name');
   var connected = false;
-  var mazeWriter = true;
+  var mazeWriter = false;
 
   socket.on('connect', function () {
   	if(!connected){
@@ -21,12 +21,13 @@
 
     socket.on('ready', function() {
     	connected = true;
+    	mazeWriter = false;
     	console.log("Please be patient; you'll be able to play as soon as an opponent arrives and joins your game!");
     });
 
     socket.on('inGame', function() {
     	connected = true;
-    	mazeWriter = false; // set the second player to join a game to be the maze traverser, not the maze writer
+    	mazeWriter = true; // set the second player to join a game to be the maze writer, not the maze traverser
     	console.log("You've joined a game!");
     });
 
@@ -34,6 +35,8 @@
     	console.log("An opponent has joined your game at last!");
     	socket.emit('setOtherPlayer', {n:name, otherID:id});
     	clearCanvas();
+    	mouseDown = false;
+		old_xy = [];
     });
 
     socket.on('drawLine',function(coord) {
@@ -63,7 +66,7 @@ var old_xy = [];
 
 var mouseDown = false;
 document.onmousedown=downMouse;
-document.onmouseup=upMouse();
+document.onmouseup=upMouse;
 
 function downMouse() {
 	mouseDown = true;
