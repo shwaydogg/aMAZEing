@@ -7,7 +7,7 @@
   var socket = io.connect('http://localhost');
   var name = prompt('What is your nickname?', 'Write your name');
   var connected = false;
-  var mazeWriter = true;
+  var mazeWriter = false;
 
   socket.on('connect', function () {
   	if(!connected){
@@ -21,12 +21,13 @@
 
     socket.on('ready', function() {
     	connected = true;
+    	mazeWriter = false;
     	console.log("Please be patient; you'll be able to play as soon as an opponent arrives and joins your game!");
     });
 
     socket.on('inGame', function() {
     	connected = true;
-    	mazeWriter = false; // set the second player to join a game to be the maze traverser, not the maze writer
+    	mazeWriter = true; // set the second player to join a game to be the maze writer, not the maze traverser
     	console.log("You've joined a game!");
     });
 
@@ -34,15 +35,13 @@
     	console.log("An opponent has joined your game at last!");
     	socket.emit('setOtherPlayer', {n:name, otherID:id});
     	clearCanvas();
+    	mouseDown = false;
+		old_xy = [];
     });
 
     socket.on('drawLine',function(coord) {
     	 drawContinuous(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
     	//drawPoint(coord.x2,coord.y2,'red');
-    });
-
-    socket.on('collision', function() {
-    	console.log("Collision! Doooooooom! Woe.");
     });
 
   });
@@ -131,15 +130,19 @@ function getMouseCoordinates(event) {
 		var x = ev.pageX - canvas.offsetLeft;
 		var y = ev.pageY - canvas.offsetTop;
 
-		if(old_xy != []) {
-	        drawContinuous(old_xy[0],old_xy[1],x,y,'black');
-	    }
-
-
-      	old_xy = [x,y];
-
 		//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!
-		socket.emit('coord',{x:x, y:y, n:name}); 
+		socket.emit('coord',{x:x, y:y, old_xy:old_xy, n:name}); 
+
+		socket.on('collision', function(msgData) {
+	    	if(msgData.collide){
+		    	console.log("Collision! Doooooooom! Woe.");
+		    } else {
+		    	if(msgData.old_xy != []) {
+			        drawContinuous(msgData.old_xy[0],msgData.old_xy[1],msgData.current_point[0],msgData.current_point[1],'black');
+			    } 	
+			    old_xy = [msgData.current_point[0],msgData.current_point[1]];
+		    }
+	    });
 	}
 }
 
