@@ -1,8 +1,7 @@
 var app = require('express').createServer(),
     io = require('socket.io').listen(app);
 
-var port = process.env.PORT || 8080;
-app.listen(port);
+app.listen(15564); //8080 for localhost
 
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/mouse.html');
