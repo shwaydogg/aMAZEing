@@ -76,15 +76,29 @@ function downMouse() {
 function upMouse() {
 	if(mazeWriter) {
 		mouseDown = false;
+		
+		if(inputMode == 'line'){
+			getMouseCoordinates('up');
+		}
 		old_xy = [];
 		socket.emit('clear_xy',name);
+		firstMouseDown = true;
+
 	}
 }
 
 var inputMode = 'drag'; //'drag'||'line'
+var firstMouseDown = true; //user for line mode only;
+document.onmousemove=getMouseCoordinates;
 
 function setMode(mode) {
-	inputMode = mode;
+	if(mazeWriter){
+		inputMode = mode;
+		alert('input mode has been set to'+ mode);
+	}
+	else{
+		alert('you are not the mazeWriter, No cheating! ')
+	}
 }
 
 if(inputMode == 'drag'){
@@ -94,37 +108,17 @@ else if(inputMode == 'line'){
 	document.onmouseup=getLineMouseCoordinates;
 }
 
-function getLineMouseCoordinates(event) {
-	
-		ev = event || window.event;
-		divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
-
-		// offset calculation needs to change once there are other elements on the page
-		// see quirksmode.org/js/findpos.html for details
-		var canvas = document.getElementById('can');
-		var x = ev.pageX - canvas.offsetLeft;
-		var y = ev.pageY - canvas.offsetTop;
-
-		if(old_xy != []) {
-	        drawContinuous(old_xy[0],old_xy[1],x,y,'black');
-	    }
-      	old_xy = [x,y];
-
-		//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!
-		socket.emit('coord',{x:x, y:y, n:name}); 
-
-}
-
-
 /**
 *identify which event is supported
 * Based on that collect pageX and pageY properties of the event object
 * pageX and pageY gets the X and Y cursor coordinates
 */
 function getMouseCoordinates(event) {
-	if(mouseDown==true) {
-		ev = event || window.event;
+	if(event == 'up'  || firstMouseDown || mouseDown==true && inputMode == 'drag') {
+		ev = window.event;
+		firstMouseDown = false;
 		divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
+		oldiv.innerHTML = "Old_xy"+old_xy; 
 
 		// offset calculation needs to change once there are other elements on the page
 		// see quirksmode.org/js/findpos.html for details
@@ -148,10 +142,29 @@ function getMouseCoordinates(event) {
 	}
 }
 
+function getPoint() {
+		ev = window.event;
+		divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
+		oldiv.innerHTML = "Old_xy"+old_xy; 
+
+		// offset calculation needs to change once there are other elements on the page
+		// see quirksmode.org/js/findpos.html for details
+		var canvas = document.getElementById('can');
+		var x = ev.pageX - canvas.offsetLeft;
+		var y = ev.pageY - canvas.offsetTop;
+
+		return {x:x, y:y};
+}
+
+
+
+
 //assign the mouseCoord Object to divObj
 function loadDiv()
 {
 divObj = document.getElementById("mouseCoord");
+oldiv = document.getElementById("old_xy");
+
 }
 
 
@@ -160,13 +173,16 @@ divObj = document.getElementById("mouseCoord");
 
 </head>
 
-<body onLoad="loadDiv()">
-<div id="mouseCoord">Mouse Coordinates position will be displayed here.
+<body onLoad="loadDiv()" style="background-color:navy;">
+<div id="mouseCoord" style="background-color:white;">Mouse Coordinates position will be displayed here.
 </div>
-<canvas id="can" width="600" height="600"> </canvas>
-
+<div id="old_xy" style="background-color:white;">old xy displayed here.
+</div>
 <button onclick="setMode('drag') ">Input Drag</button>
 <button onclick="setMode('line') ">Input Line</button>
+<br/>
+<canvas id="can" width="600" height="600" style="background-color:white; positi"> </canvas>
+
 
 <script type="text/javascript">
 	var canvas = document.getElementById('can');
