@@ -184,19 +184,21 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('coord', function (msgData) {
-        var current_user = users[msgData.n];
-        var current_point = {x:msgData.x,y:msgData.y};
-        if (current_user.old_xy != {} && lineCollide(current_point,current_user,users)) {
-            io.sockets.in(current_user.room).emit('collision', {collide:true, current_point:[current_point.x,current_point.y], old_xy:msgData.old_xy});
-        } else {
-            current_user.points.push(current_point);
+        if(users[msgData.n]) {
+            var current_user = users[msgData.n];
+            var current_point = {x:msgData.x,y:msgData.y};
+            if (current_user.old_xy != {} && lineCollide(current_point,current_user,users)) {
+                io.sockets.in(current_user.room).emit('collision', {collide:true, current_point:[current_point.x,current_point.y], old_xy:msgData.old_xy});
+            } else {
+                current_user.points.push(current_point);
 
-            if(current_user.old_xy != {}) {
-                io.sockets.socket(current_user.other_player_id).emit('drawLine',{x1:current_user.old_xy.x,y1:current_user.old_xy.y,x2:msgData.x, y2:msgData.y});
+                if(current_user.old_xy != {}) {
+                    io.sockets.socket(current_user.other_player_id).emit('drawLine',{x1:current_user.old_xy.x,y1:current_user.old_xy.y,x2:msgData.x, y2:msgData.y});
+                }
+
+                current_user.old_xy = current_point;
+                socket.emit('collision', {collide:false, current_point:[current_point.x,current_point.y], old_xy:msgData.old_xy});
             }
-
-            current_user.old_xy = current_point;
-            socket.emit('collision', {collide:false, current_point:[current_point.x,current_point.y], old_xy:msgData.old_xy});
         }
     });
 
