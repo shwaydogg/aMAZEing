@@ -43,7 +43,7 @@
     });
 
     socket.on('drawLine',function(coord) {
-    	 drawContinuous(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
+    	 drawLine(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
     	//drawPoint(coord.x2,coord.y2,'red');
     });
 
@@ -56,137 +56,26 @@
 
 
 
-
-
-var divObj;
-var old_xy = [];
-//http://vijayk.wordpress.com/2006/12/11/how-to-get-mouse-coordinates-with-javascript/
-/**
-* capture mousemove event, this statement will cause browser to
-* call getMouseCoordites function each time mouse moves
-*/
-
-var mouseDown = false;
-document.onmousedown=downMouse;
-document.onmouseup=upMouse;
-
-function downMouse() {
-	mouseDown = true;
-}
-function upMouse() {
-	if(mazeWriter) {
-		mouseDown = false;
-		
-		if(inputMode == 'line'){
-			getMouseCoordinates('up');
-		}
-		old_xy = [];
-		socket.emit('clear_xy',name);
-		firstMouseDown = true;
-
-	}
-}
-
-var inputMode = 'drag'; //'drag'||'line'
-var firstMouseDown = true; //user for line mode only;
-document.onmousemove=getMouseCoordinates;
-
-function setMode(mode) {
-	if(mazeWriter){
-		inputMode = mode;
-		alert('input mode has been set to'+ mode);
-	}
-	else{
-		alert('you are not the mazeWriter, No cheating! ')
-	}
-}
-
-if(inputMode == 'drag'){
-	document.onmousemove=getMouseCoordinates;
-}
-else if(inputMode == 'line'){
-	document.onmouseup=getLineMouseCoordinates;
-}
-
-/**
-*identify which event is supported
-* Based on that collect pageX and pageY properties of the event object
-* pageX and pageY gets the X and Y cursor coordinates
-*/
-function getMouseCoordinates(event) {
-	if(event == 'up'  || firstMouseDown || mouseDown==true && inputMode == 'drag') {
-		ev = window.event;
-		firstMouseDown = false;
-		divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
-		oldiv.innerHTML = "Old_xy"+old_xy; 
-
-		// offset calculation needs to change once there are other elements on the page
-		// see quirksmode.org/js/findpos.html for details
-		var canvas = document.getElementById('can');
-		var x = ev.pageX - canvas.offsetLeft;
-		var y = ev.pageY - canvas.offsetTop;
-
-		//THIS IS MY SOCKET.IO CODE! LOOK HOW SIMPLE IT IS!
-		socket.emit('coord',{x:x, y:y, old_xy:old_xy, n:name}); 
-
-		socket.on('collision', function(msgData) {
-	    	if(msgData.collide){
-		    	console.log("Collision! Doooooooom! Woe.");
-		    } else {
-		    	if(msgData.old_xy != []) {
-			        drawContinuous(msgData.old_xy[0],msgData.old_xy[1],msgData.current_point[0],msgData.current_point[1],'black');
-			    } 	
-			    old_xy = [msgData.current_point[0],msgData.current_point[1]];
-		    }
-	    });
-	}
-}
-
-function getPoint() {
-		ev = window.event;
-		divObj.innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
-		oldiv.innerHTML = "Old_xy"+old_xy; 
-
-		// offset calculation needs to change once there are other elements on the page
-		// see quirksmode.org/js/findpos.html for details
-		var canvas = document.getElementById('can');
-		var x = ev.pageX - canvas.offsetLeft;
-		var y = ev.pageY - canvas.offsetTop;
-
-		return {x:x, y:y};
-}
-
-
-
-
-//assign the mouseCoord Object to divObj
-function loadDiv()
-{
-divObj = document.getElementById("mouseCoord");
-oldiv = document.getElementById("old_xy");
-
-}
-
-
 </script>
 
 
 </head>
 
 <body onLoad="loadDiv()" style="background-color:navy;">
-<div id="mouseCoord" style="background-color:white;">Mouse Coordinates position will be displayed here.
-</div>
-<div id="old_xy" style="background-color:white;">old xy displayed here.
-</div>
-<button onclick="setMode('drag') ">Input Drag</button>
-<button onclick="setMode('line') ">Input Line</button>
-<br/>
-<canvas id="can" width="600" height="600" style="background-color:white; positi"> </canvas>
+	<div id="mouseCoord" style="background-color:white;">Mouse Coordinates position will be displayed here.</div>
+	<div id="old_xy" style="background-color:white;">old xy displayed here.</div>
+	<button onclick="setMode('drag') ">Input Drag</button>
+	<button onclick="setMode('line') ">Input Line</button>
+	<br/>
+	<canvas id="can" width="600" height="600" style="background-color:white; positi"></canvas>
 
 
 <script type="text/javascript">
+//Canvas Code: BEGIN
+function (){
+	// hide canvase http://robertnyman.com/2011/07/26/using-the-html5-canvas-clip-method-to-hide-certain-content/
 	var canvas = document.getElementById('can');
-	function drawContinuous(x1,y1,x2,y2,color){
+	function drawLine(x1,y1,x2,y2,color){
 		if(canvas.getContext){
 			var ctx = canvas.getContext('2d');
 			ctx.strokeStyle=color;
@@ -220,7 +109,77 @@ oldiv = document.getElementById("old_xy");
 		}
 	}
 
-	drawContinuous();
+	drawLine();
+}();
+//Canvas Code: END
+
+//Mouse Events and Sending Lines: BEGIN
+function(){
+	var isMouseDown = false;
+	var inputMode = 'drag'; //'drag'||'line'
+	var firstPoint = {};
+
+	document.onmousedown=mouseDown;
+	document.onmouseup=mouseUp;
+	document.onmousemove=mouseMove;
+
+	function mouseDown() {
+		//console.log('mousedown!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+		firstPoint = getPoint();
+		isMouseDown = true;
+	}
+	function mouseMove(){
+		if(inputMode != 'line'){
+			sendLine();
+			console.log(firstPoint);
+			if(isMouseDown){
+				firstPoint = getPoint();//this cannot happen before sendLine is called!
+			}
+		}
+	}
+	function mouseUp() {
+		if(mazeWriter) {
+			//console.log('I am the mazeWriter firstPoint = ',firstPoint);
+			if(inputMode == 'line'){
+				sendLine();
+			}
+			firstPoint = {};//this cannot happen before sendLine() is called!
+			console.log(' firstPoint = ',firstPoint);
+			isMouseDown = false;
+		}
+	}
+
+	function setMode(mode) {
+		if(mazeWriter){
+			inputMode = mode;
+			alert('input mode has been set to'+ mode);
+		}
+		else{
+			alert('you are not the mazeWriter, No cheating! ')
+		}
+	}
+
+	function getPoint() {
+			ev = window.event;
+			document.getElementById("mouseCoord").innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
+			document.getElementById("old_xy").innerHTML = "Old_xy"+old_xy; 
+
+			// offset calculation needs to change once there are other elements on the page
+			// see quirksmode.org/js/findpos.html for details
+			var canvas = document.getElementById('can');
+			var x = ev.pageX - canvas.offsetLeft;
+			var y = ev.pageY - canvas.offsetTop;
+			return {x:x, y:y};
+	}
+
+	function sendLine(){
+		var secondPoint = getPoint();
+		socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y});
+		//drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'green');
+	}
+}();
+//Mouse Events and Sending Lines: END
+
 </script>
 </body>
 </html>
