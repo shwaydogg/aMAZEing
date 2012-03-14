@@ -18,8 +18,8 @@ function User(name,id) {
     this.id = id;
     this.room = "";
     this.mazeWriter = false;
-    this.old_xy = {};
     this.points = [];
+    this.lastValidPoint = null;
 }
 
 function pixelCollide(current_point, current_user) {
@@ -37,8 +37,9 @@ function pixelCollide(current_point, current_user) {
     return false;
 }
 
-function lineCollide(current_point, current_user, users) {
-    var inputLine = [current_point, current_user.old_xy];
+function lineCollide(pointA, pointB, current_user, users) {
+    pointA = pointA || current_user.lastValidPoint;
+    var inputLine = [pointA,pointB];
     for (var user in users) {
         if(user != current_user.name) {
             for (var i = 0; i+1< users[user].points.length; i++){
@@ -174,32 +175,49 @@ io.sockets.on('connection', function (socket) {
         var current_user = users[msgData.n];
         current_user.other_player_id = msgData.otherID;
         current_user.points = [];
-        current_user.old_xy = {};
         console.log(current_user.name, ' has user ID ', current_user.id, 'and is playing against a user with ID: ', current_user.other_player_id);
     });
 
-    socket.on('clear_xy', function (name) {
+    socket.on('endLine', function (name) {
         if(users[name]) {
-            users[name].old_xy = {};
+            users[name].lastValidPoint = null;
             users[name].points[ users[name].points.length - 1 ].end = true;
         }
     });
 
-    socket.on('coord', function (msgData) {
-        if(users[msgData.n]) {
-            var current_user = users[msgData.n];
-            var current_point = {x:msgData.x,y:msgData.y};
-            if (current_user.old_xy != {} && lineCollide(current_point,current_user,users)) {
-                io.sockets.in(current_user.room).emit('collision', {collide:true, current_point:[current_point.x,current_point.y], old_xy:msgData.old_xy});
-            } else {
-                current_user.points.push(current_point);
+    socket.on('sendLine', function (msgData) { //we are receiving the line the client is sending it.
+        var current_user = users[msgData.n];
+        var pointB = {x:msgData.x2,y:msgData.y2};
 
-                if(current_user.old_xy != {}) {
-                    io.sockets.socket(current_user.other_player_id).emit('drawLine',{x1:current_user.old_xy.x,y1:current_user.old_xy.y,x2:msgData.x, y2:msgData.y});
+        if(current_user && current_user.room){
+            var pointA = current_user.lastValidPoint || {x:msgData.x1,y:msgData.y1};
+            if (lineCollide(pointA, pointB,current_user,users)) {
+                io.sockets.in(current_user.room).emit('collision');
+            } else {
+                if(current_user.mazeWriter){
+                    io.sockets.in(current_user.room).emit('drawMazeLine',{
+                                                x1:pointA.x,
+                                                y1:pointA.y,
+                                                x2:pointB.x,
+                                                y2:pointB.y
+                                                                        });
+                }
+                else{
+                    io.sockets.in(current_user.room).emit('drawPathLine',msgData);
                 }
 
-                current_user.old_xy = current_point;
-                socket.emit('collision', {collide:false, current_point:[current_point.x,current_point.y], old_xy:msgData.old_xy});
+                //assignment of lastValidPoint needs to happent after sending lines to client.
+                if(msgData.end){
+                    pointB.end = true;
+                    current_user.lastValidPoint = null;
+                }else{
+                    current_user.lastValidPoint = pointB;
+                }
+
+                if( current_user.points.length === 0 || current_user.points[ current_user.points.length - 1 ].end){
+                    current_user.points.push(pointA);
+                }
+                current_user.points.push(pointB);
             }
         }
     });

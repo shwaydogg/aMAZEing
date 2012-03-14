@@ -47,6 +47,14 @@
     	//drawPoint(coord.x2,coord.y2,'red');
     });
 
+    socket.on('drawMazeLine',function(line) {
+    	 drawLine(line.x1,line.y1,line.x2,line.y2, 'black');
+    });
+
+    socket.on('drawPathLine',function(line) {
+    	 drawLine(line.x1,line.y1,line.x2,line.y2, 'green');
+    });
+
   });
 
 
@@ -61,18 +69,18 @@
 
 </head>
 
-<body onLoad="loadDiv()" style="background-color:navy;">
+<body style="background-color:navy;">
 	<div id="mouseCoord" style="background-color:white;">Mouse Coordinates position will be displayed here.</div>
 	<div id="old_xy" style="background-color:white;">old xy displayed here.</div>
 	<button onclick="setMode('drag') ">Input Drag</button>
 	<button onclick="setMode('line') ">Input Line</button>
 	<br/>
-	<canvas id="can" width="600" height="600" style="background-color:white; positi"></canvas>
+	<canvas id="can" width="600" height="600" style="background-color:white;"></canvas>
 
 
 <script type="text/javascript">
 //Canvas Code: BEGIN
-function (){
+{
 	// hide canvase http://robertnyman.com/2011/07/26/using-the-html5-canvas-clip-method-to-hide-certain-content/
 	var canvas = document.getElementById('can');
 	function drawLine(x1,y1,x2,y2,color){
@@ -110,13 +118,13 @@ function (){
 	}
 
 	drawLine();
-}();
+}
 //Canvas Code: END
 
 //Mouse Events and Sending Lines: BEGIN
-function(){
+{
 	var isMouseDown = false;
-	var inputMode = 'drag'; //'drag'||'line'
+	var inputMode = mazeWriter? 'line' : 'drag'; //'drag'||'line'
 	var firstPoint = {};
 
 	document.onmousedown=mouseDown;
@@ -130,22 +138,26 @@ function(){
 	}
 	function mouseMove(){
 		if(inputMode != 'line'){
-			sendLine();
-			console.log(firstPoint);
+			if(!mazeWriter || isMouseDown){
+				sendLine();
+			}
+			//console.log(firstPoint);
 			if(isMouseDown){
 				firstPoint = getPoint();//this cannot happen before sendLine is called!
 			}
 		}
 	}
 	function mouseUp() {
-		if(mazeWriter) {
+		if(mazeWriter) { //nothing should ever change on mouseup for mazeSolver
 			//console.log('I am the mazeWriter firstPoint = ',firstPoint);
-			if(inputMode == 'line'){
-				sendLine();
-			}
+			socket.emit('endLine', {name:name}); // this may be superfluous if always in line mode for mazeWriter...
+			//if(inputMode == 'line'){
+				sendLine('end');
+			//}
 			firstPoint = {};//this cannot happen before sendLine() is called!
 			console.log(' firstPoint = ',firstPoint);
 			isMouseDown = false;
+
 		}
 	}
 
@@ -172,12 +184,13 @@ function(){
 			return {x:x, y:y};
 	}
 
-	function sendLine(){
+	function sendLine(end){
 		var secondPoint = getPoint();
-		socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y});
-		//drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'green');
+		socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
+		console.log({x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
+		drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'purple'); // this should be commented out for now it lets you see the path that the mouse takes when out of bounds.
 	}
-}();
+}
 //Mouse Events and Sending Lines: END
 
 </script>
