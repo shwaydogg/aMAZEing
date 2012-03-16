@@ -8,39 +8,36 @@
     var socket = io.connect('http://localhost'); //  http://maze.nodester.com')
 
 
-  var name = prompt('What is your nickname?', 'Write your name');
+  //var name = prompt('What is your nickname?', 'Write your name');
   var connected = false;
   var mazeWriter = false;
+  var inGame = false;
 
   socket.on('connect', function () {
-  	if(!connected){
-    	socket.emit('set name', name);
-    }
-
-    socket.on('badName', function () {
-    name = prompt('That name is ALREADY in use! What is your nickname?', 'Write your name');
-      socket.emit('set name', name);
-    });
 
     socket.on('ready', function() {
-    	connected = true;
-    	mazeWriter = false;
     	console.log("Please be patient; you'll be able to play as soon as an opponent arrives and joins your game!");
     });
 
-    socket.on('inGame', function() {
-    	connected = true;
+    socket.on('startGameMAzeWriter', function() {
+    	clearCanvas();
+    	inGame = true;
     	mazeWriter = true; // set the second player to join a game to be the maze writer, not the maze traverser
-    	console.log("You've joined a game!");
+    	console.log("GET YOUR MAZE ON!  start playing jock jams");
     });
 
-    socket.on('newPlayer', function(id) {
-    	console.log("An opponent has joined your game at last!");
-    	socket.emit('setOtherPlayer', {n:name, otherID:id});
+    socket.on('startGamePathFinder', function() {
+    	console.log("Let the games begin, good luck finding your way out... PathFinder!");
     	clearCanvas();
+    	inGame = true;
     	mouseDown = false;
+    	mazeWriter = false;
 		old_xy = [];
     });
+
+    socket.on('otherPlayerDisconnect',function(log) {
+    	inGame = false;
+	});
 
     socket.on('drawLine',function(coord) {
     	 drawLine(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
@@ -54,6 +51,10 @@
     socket.on('drawPathLine',function(line) {
     	 drawLine(line.x1,line.y1,line.x2,line.y2, 'green');
     });
+
+    socket.on('consoleLog',function(log) {
+		console.log(log);
+	});
 
   });
 
@@ -139,7 +140,7 @@
 	function mouseMove(){
 		if(inputMode != 'line'){
 			if(!mazeWriter || isMouseDown){
-				sendLine();
+				sendLine();	
 			}
 			//console.log(firstPoint);
 			if(isMouseDown){
@@ -150,7 +151,8 @@
 	function mouseUp() {
 		if(mazeWriter) { //nothing should ever change on mouseup for mazeSolver
 			//console.log('I am the mazeWriter firstPoint = ',firstPoint);
-			socket.emit('endLine', {name:name}); // this may be superfluous if always in line mode for mazeWriter...
+			//alert("emitting endLIne");
+			//socket.emit('endLine', {name:name}); // this may be superfluous if always in line mode for mazeWriter...
 			//if(inputMode == 'line'){
 				sendLine('end');
 			//}
@@ -185,10 +187,12 @@
 	}
 
 	function sendLine(end){
-		var secondPoint = getPoint();
-		socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
-		console.log({x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
-		drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'purple'); // this should be commented out for now it lets you see the path that the mouse takes when out of bounds.
+		if(inGame){
+			var secondPoint = getPoint();
+			socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
+			console.log({x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
+			drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'purple'); // this should be commented out for now it lets you see the path that the mouse takes when out of bounds.
+		}
 	}
 }
 //Mouse Events and Sending Lines: END
