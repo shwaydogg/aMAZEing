@@ -32,7 +32,7 @@
     	inGame = true;
     	mouseDown = false;
     	mazeWriter = false;
-    	document.getElementById("block1").style.
+   		document.getElementById("canvas-container").style.cursor='none';
 		old_xy = [];
     });
 
@@ -232,16 +232,29 @@
 		}
 	}
 
+	// from quirksmode.org/js/findpos.html start
+	function findPos(obj) {
+		var curleft = curtop = 0;
+		if (obj.offsetParent) {
+			do {
+				curleft += obj.offsetLeft;
+				curtop += obj.offsetTop;
+			} while (obj = obj.offsetParent);
+		}
+		return {x:curleft,y:curtop};
+	}
+	// from quirksmode.org/js/findpos.html end
+
 	function getPoint() {
 			ev = window.event;
 			document.getElementById("mouseCoord").innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
 			document.getElementById("old_xy").innerHTML = "Old_xy"+old_xy; 
 
-			// offset calculation needs to change once there are other elements on the page
-			// see quirksmode.org/js/findpos.html for details
 			var canvas = document.getElementById('can');
-			var x = ev.pageX - canvas.offsetLeft;
-			var y = ev.pageY - canvas.offsetTop;
+			var canvasOffSet = findPos(canvas); 
+
+			var x = ev.pageX - canvasOffSet.x;
+			var y = ev.pageY - canvasOffSet.y;
 			return {x:x, y:y};
 	}
 
