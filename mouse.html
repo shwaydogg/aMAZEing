@@ -4,8 +4,8 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
-  var socket = io.connect('http://amaze.nodester.com'); // http://localhost when running locally
-  //var socket = io.connect('http://localhost'); //  http://maze.nodester.com')
+  //var socket = io.connect('http://amaze.nodester.com'); // http://localhost when running locally
+  var socket = io.connect('http://localhost'); //  http://maze.nodester.com')
 
 
   //var name = prompt('What is your nickname?', 'Write your name');
@@ -32,6 +32,7 @@
     	inGame = true;
     	mouseDown = false;
     	mazeWriter = false;
+    	document.getElementById("block1").style.
 		old_xy = [];
     });
 
@@ -76,14 +77,68 @@
 	<button onclick="setMode('drag') ">Input Drag</button>
 	<button onclick="setMode('line') ">Input Line</button>
 	<br/>
-	<canvas id="can" width="600" height="600" style="background-color:white;"></canvas>
+	<div id="canvas-container" style="position:relative; width:600px; height:600px;" >
+		<canvas id="can" width="600" height="600" style="background-color:white;"></canvas>
+		<div id="block1" style="height:0px; width:600px; background:black; z-index:999999; position:absolute; 
+								top:0px; left:0px;
 
+								-moz-box-shadow:    3px 0px 5px 6px #000;
+  								-webkit-box-shadow: 3px 0px 5px 6px #000;
+  								box-shadow:         3px 0px 5px 6px #000;
 
-<script type="text/javascript">
+								"> </div>
+		<div id="block2" style="height:600px; width:0px; background:black; z-index:999999; position:absolute; 
+								top:0px; right:0px;
+
+								-moz-box-shadow:    0px 3px 5px 6px #000;
+  								-webkit-box-shadow: 0px 3px 5px 6px #000;
+  								box-shadow:         0px 3px 5px 6px #000;
+
+								"> </div>
+		<div id="block3" style="height:0px; width:600px; background:black; z-index:999999; position:absolute; 
+								bottom:0px; right:0px;
+
+								-moz-box-shadow:    -3px 0px 5px 6px #000;
+  								-webkit-box-shadow: -3px 0px 5px 6px #000;
+  								box-shadow:         -3px 0px 5px 6px #000;
+
+								"> </div>
+		<div id="block4" style="height:600px; width:0px; background:black; z-index:999999; position:absolute; 
+								bottom:0px; left:0px;
+
+								-moz-box-shadow:    0px -3px 5px 6px #000;
+  								-webkit-box-shadow: 0px -3px 5px 6px #000;
+  								box-shadow:         0px -3px 5px 6px #000;
+
+								"> </div>
+	</div>
+\<script type="text/javascript">
 //Canvas Code: BEGIN
 {
+
+	var canWidth = 600;
+	var canHeight = canWidth;
+	var slitWidth = 20;
+	var slitHeight = slitWidth;
+
+	function clipper(point){
+		var obj=document.getElementById("block1");
+		obj.style.height=point.y - slitHeight;
+
+		var obj=document.getElementById("block2");
+		obj.style.width=(canWidth - point.x) - slitWidth;
+
+		var obj=document.getElementById("block3");
+		obj.style.height=(canHeight - point.y) - slitHeight;
+
+		var obj=document.getElementById("block4");
+		obj.style.width= point.x - slitWidth;
+
+	}
+
 	// hide canvase http://robertnyman.com/2011/07/26/using-the-html5-canvas-clip-method-to-hide-certain-content/
 	var canvas = document.getElementById('can');
+	var clipPoint;
 	function drawLine(x1,y1,x2,y2,color){
 		if(canvas.getContext){
 			var ctx = canvas.getContext('2d');
@@ -118,7 +173,6 @@
 		}
 	}
 
-	drawLine();
 }
 //Canvas Code: END
 
@@ -147,6 +201,11 @@
 				firstPoint = getPoint();//this cannot happen before sendLine is called!
 			}
 		}
+
+		if(!mazeWriter && inGame){
+			clipper(getPoint());
+		}
+
 	}
 	function mouseUp() {
 		if(mazeWriter) { //nothing should ever change on mouseup for mazeSolver
@@ -190,7 +249,7 @@
 		if(inGame){
 			var secondPoint = getPoint();
 			socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
-			console.log({x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
+			//console.log({x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
 			drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'purple'); // this should be commented out for now it lets you see the path that the mouse takes when out of bounds.
 		}
 	}
