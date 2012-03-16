@@ -118,7 +118,7 @@
 
 	var canWidth = 600;
 	var canHeight = canWidth;
-	var slitWidth = 20;
+	var slitWidth = 30;
 	var slitHeight = slitWidth;
 
 	function clipper(point){
@@ -263,7 +263,7 @@
 			var secondPoint = getPoint();
 			socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
 			//console.log({x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
-			drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'purple'); // this should be commented out for now it lets you see the path that the mouse takes when out of bounds.
+			//drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'purple'); // this should be commented out for now it lets you see the path that the mouse takes when out of bounds.
 		}
 	}
 }
