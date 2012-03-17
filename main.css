@@ -3,11 +3,14 @@ body{
     text-align:center;
     width:100%;
 }
-h1, h2{
+h1{
     color:#76B347;
 }
-#mouseCoord{
+h2{
     color:white;
+}
+#mouseCoord{
+    color:#76B347;
 }
 ul.control-buttons{
     height:100px;
@@ -26,23 +29,50 @@ ul li{
 div.bottom-spacer{
     height:50px;
 }
+
+
 div#canvas-container{
     margin-left: auto; margin-right: auto;
     position:relative;
     width:600px; 
     height:600px;
     border:10px solid black;
-
 }
+
+div#startingBlock,div#endBlock{
+  width: 45px;
+  height: 45px;
+  position:absolute;
+  font-size:10px;
+  z-index:1000000;
+}
+
+div#startingBlock{
+  border:2px solid red;
+  color:red;
+  top:5px; 
+  left:5px;
+}
+
+div#endBlock{
+  border:2px solid green;
+  color:green;
+  top:550px;
+  left:550px;
+}
+
 
 canvas#can{
     background-color:white;
     width:600px; 
     height:600px;
+
 }
 
+
+
 div#block1{
-    height:0px; width:600px; background:black; z-index:999999; position:absolute; 
+    height:0px; width:600px; background:black; z-index:999998; position:absolute; 
                                 top:0px; left:0px;
 
                                 -moz-box-shadow:    3px 0px 5px 6px #000;

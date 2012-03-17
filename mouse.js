@@ -3,8 +3,8 @@
 var app = require('express').createServer(),
     io = require('socket.io').listen(app);
 
-app.listen(15781); //8080 for localhost
-//app.listen(8080); //8080 for localhost
+//app.listen(15781); //8080 for localhost
+app.listen(8080); //8080 for localhost
 
 
 app.get('/', function (req, res) {
@@ -18,6 +18,11 @@ app.get('/main.css', function (req, res) {
 
 var numGames = 0;
 var games = {};
+
+
+
+var canvasWidth=600;
+var startingBlockWidth = 45;
 
 
 var waitingPlayer = false;
@@ -98,7 +103,6 @@ function playerPath(player){
         return player.game.trailPath;
     }
 }
-
 
 //Collision Geometry BEGIN:
 
@@ -215,6 +219,13 @@ function playerPath(player){
 
 //Collision Geometry END
 
+function checkDone(point){
+    if( (point.x > (canvasWidth - startingBlockWidth)) && (point.x > (canvasWidth - startingBlockWidth))){
+        return true;
+    }
+    return false;
+}
+
 function freePlayer(socket){
     var rooms = io.sockets.manager.rooms;
 
@@ -278,6 +289,10 @@ io.sockets.on('connection', function (socket) {
                 }
                 else{
                     io.sockets.in(player.room).emit('drawPathLine',msgData);
+                    console.log("should have emitted drawPathLine");
+                    if(checkDone(pointB)){
+                        io.sockets.in(player.room).emit('mazeComplete');
+                    }
                 }
 
                 //assignment of lastValidPoint needs to happent after sending lines to client.
@@ -287,7 +302,6 @@ io.sockets.on('connection', function (socket) {
                 }else{
                     player.lastValidPoint = pointB;
                 }
-
                 if( path.length === 0 || path[ path.length-1 ].end){
                     path.push(pointA);
                 }

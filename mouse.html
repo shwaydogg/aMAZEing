@@ -5,8 +5,8 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
-  var socket = io.connect('http://amaze.nodester.com'); 
-  //var socket = io.connect('http://localhost'); 
+  //var socket = io.connect('http://amaze.nodester.com'); 
+  var socket = io.connect('http://localhost'); 
 
 
   //var name = prompt('What is your nickname?', 'Write your name');
@@ -24,7 +24,7 @@
     	clearCanvas();
     	inGame = true;
     	mazeWriter = true; // set the second player to join a game to be the maze writer, not the maze traverser
-    	document.getElementById("room-name").innerHTML="Get your Maze On, MazeMaker! You're in room: " +room;
+    	document.getElementById("room-name").innerHTML="Get your Maze On, Δrchitect!<br/><i>You have two minutes to draw a maze that takes me one minute to solve.</i> <br/> You're in room: " +room;
     });
 
     socket.on('startGamePathFinder', function(room) {
@@ -54,6 +54,22 @@
     	 drawLine(line.x1,line.y1,line.x2,line.y2, 'green');
     });
 
+    function remove(id){
+	    return (elem=document.getElementById(id)).parentNode.removeChild(elem);
+	}
+
+    socket.on('mazeComplete',function() {
+    	if(!mazeWriter){
+    		alert('You finished the maze, congrats!  Close your window to disconnect or refresh to enter a new game.  MazeOn, Path Finder!');
+    	}else{
+    		alert('They finished!');
+    	}
+    	remove("block1");
+		remove("block2");
+		remove("block3");
+		remove("block4");
+    });
+
     socket.on('consoleLog',function(log) {
 		console.log(log);
 	});
@@ -66,27 +82,32 @@
 </head>
 
 <body>
-	<h1>&Delta;maze Amaze</h1>
+	<h1>Δmaze Amaze</h1>
 	<h2 id="room-name"></h2>
 	<div id="mouseCoord">Mouse Coordinates position will be displayed here.</div>
 	<br/>
 	<div id="canvas-container" class="shadow">
 		<canvas id="can" width="600" height="600"></canvas>
+		<div id="startingBlock">ENTER</div>
 		<div id="block1" > </div>
 		<div id="block2" > </div>
 		<div id="block3" > </div>
 		<div id="block4" > </div>
-
+		<div id="endBlock">EXIT</div>
+ 
 	</div>
-<ul class="control-buttons">
-	<li>
-		<button class="punch" onclick="setMode('drag') ">Input Curvey</button> 
-	</li>
-	<li>
-		<button class="punch" onclick="setMode('line') ">Input Line</button>
-	</li>
-</ul>
-<div class="bottom-spacer"></div>
+	<ul class="control-buttons">
+		<li>
+			<button class="punch" onclick="setMode('drag') ">Curvey</button> 
+		</li>
+		<li>
+			<button class="punch" onclick="setMode('line') ">Line</button>
+		</li>
+	</ul>
+	<div class="bottom-spacer"></div>
+
+
+
 <script type="text/javascript">
 //Canvas Code: BEGIN
 {
@@ -147,7 +168,6 @@
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 		}
 	}
-
 }
 //Canvas Code: END
 
@@ -156,10 +176,30 @@
 	var isMouseDown = false;
 	var inputMode = mazeWriter? 'line' : 'drag'; //'drag'||'line'
 	var firstPoint = {};
+	var pathStarted = false;
 
 	document.onmousedown=mouseDown;
 	document.onmouseup=mouseUp;
 	document.onmousemove=mouseMove;
+
+	document.getElementById("startingBlock").onmousedown=onStartingBlock;
+	document.getElementById("endBlock").onmousemove=onExit;
+
+	function onStartingBlock(){
+		if(!mazeWriter && !pathStarted){
+			pathStarted = true;
+		}
+	};
+
+	function onExit(){
+		// This needs to be handled by server
+		// if(!mazeWriter && pathStarted){
+		// 	alert('You finished the maze, congrats!  Close your window to disconnect or refresh to enter a new game.  MazeOn, Path Finder!');
+		// }
+		if(mazeWriter){
+			alert("Stop messing around and get started on the green Starting Block!");
+		}
+	};
 
 	function mouseDown() {
 		//console.log('mousedown!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
@@ -167,29 +207,28 @@
 		isMouseDown = true;
 	}
 	function mouseMove(){
-		if(inputMode != 'line'){
-			if(!mazeWriter || isMouseDown){
-				sendLine();	
+		if(mazeWriter || pathStarted){
+			if(inputMode != 'line'){
+				if(!mazeWriter || isMouseDown){
+					sendLine();	
+				}
+				//console.log(firstPoint);
+				if(isMouseDown){
+					firstPoint = getPoint();//this cannot happen before sendLine is called!
+				}
 			}
-			//console.log(firstPoint);
-			if(isMouseDown){
-				firstPoint = getPoint();//this cannot happen before sendLine is called!
-			}
-		}
-
+		}	
 		if(!mazeWriter && inGame){
 			clipper(getPoint());
 		}
-
 	}
 	function mouseUp() {
 		if(mazeWriter) { //nothing should ever change on mouseup for mazeSolver
 			//console.log('I am the mazeWriter firstPoint = ',firstPoint);
-			//alert("emitting endLIne");
-			//socket.emit('endLine', {name:name}); // this may be superfluous if always in line mode for mazeWriter...
-			//if(inputMode == 'line'){
-				sendLine('end');
-			//}
+			
+			socket.emit('endLine', {name:name}); // this may be superfluous if always in line mode for mazeWriter...UPDATE: turns out this is not superfluous it is needed when the end of a mazemaker line is not valid. (this happens less often because in order for the mazeWriter to have collision they need to keep drawing after the pathfinder has started and intersect one of their lines.)
+			
+			sendLine('end');
 			firstPoint = {};//this cannot happen before sendLine() is called!
 			console.log(' firstPoint = ',firstPoint);
 			isMouseDown = false;
