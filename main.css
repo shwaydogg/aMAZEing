@@ -3,12 +3,14 @@ body{
     text-align:center;
     width:100%;
 }
-
+h1{
+    color:#76B347;
+}
 #mouseCoord{
     color:white;
 }
 ul.control-buttons{
-    height:200px;
+    height:100px;
     width:420px;
     margin-left: auto; margin-right: auto;
     padding:0;
@@ -17,10 +19,9 @@ ul li{
     postion:relative;
     style:none;
     float:left;
+    margin:0 30px;
 }
-button{
-    margin:30px;
-}
+
 
 div.bottom-spacer{
     height:50px;
@@ -30,8 +31,10 @@ div#canvas-container{
     position:relative;
     width:600px; 
     height:600px;
+    border:10px solid black;
 
 }
+
 canvas#can{
     background-color:white;
     width:600px; 
@@ -74,7 +77,7 @@ div#block4{
 
 /* punch buggy no punch back!
 *******************************************************************************/
-button.punch {
+button.punch{
   background: #76B347;
   border-top: 1px solid #63A62F;
   border-right: 1px solid #63A62F;
@@ -97,13 +100,23 @@ button.punch {
   text-shadow: 0px -1px 1px #63A62F;
   width: 150px;
   -webkit-background-clip: padding-box; }
-  button.punch:hover {
+  
+   button.punch:hover {
     -webkit-box-shadow: inset 0 0px 20px 1px #76B347, 0px 1px 0 #63A62F, 0 6px 0px #1f3053, 0 8px 4px 1px #111111;
     -moz-box-shadow: inset 0 0px 20px 1px #76B347, 0px 1px 0 #63A62F, 0 6px 0px #1f3053, 0 8px 4px 1px #111111;
     box-shadow: inset 0 0px 20px 1px #76B347, 0px 1px 0 #63A62F, 0 6px 0px #1f3053, 0 8px 4px 1px #111111;
-    cursor: pointer; }
-  button.punch:active {
+    cursor: pointer; } 
+   button.punch:active {
     -webkit-box-shadow: inset 0 1px 10px 1px #63A62F, 0 1px 0 #63A62F, 0 2px 0 #1f3053, 0 4px 3px 0 #111111;
     -moz-box-shadow: inset 0 1px 10px 1px #63A62F, 0 1px 0 #63A62F, 0 2px 0 #1f3053, 0 4px 3px 0 #111111;
     box-shadow: inset 0 1px 10px 1px #63A62F, 0 1px 0 #63A62F, 0 2px 0 #1f3053, 0 4px 3px 0 #111111;
-    margin-top: 58px; }
+    margin-top: 58px; } 
+
+button.punch {
+  margin-top: 54px; 
+}
+
+button{
+-webkit-appearance: button;
+vertial-align:none;
+}

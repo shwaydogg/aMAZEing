@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Get Mouse Coordinates</title>
+<title>ΔMaze Amaze</title>
 <link rel="stylesheet" type="text/css" href="main.css" media="all">
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -66,11 +66,11 @@
 </head>
 
 <body>
+	<h1>&Delta;maze Amaze</h1>
 	<div id="mouseCoord">Mouse Coordinates position will be displayed here.</div>
-
 	<br/>
-	<div id="canvas-container"  >
-		<canvas id="can"></canvas>
+	<div id="canvas-container" class="shadow">
+		<canvas id="can" width="600" height="600"></canvas>
 		<div id="block1" > </div>
 		<div id="block2" > </div>
 		<div id="block3" > </div>
@@ -82,7 +82,7 @@
 		<button class="punch" onclick="setMode('drag') ">Input Curvey</button> 
 	</li>
 	<li>
-		<button class="punch" conclick="setMode('line') ">Input Line</button>
+		<button class="punch" onclick="setMode('line') ">Input Line</button>
 	</li>
 </ul>
 <div class="bottom-spacer"></div>
@@ -235,6 +235,7 @@
 			var secondPoint = getPoint();
 			socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
 			//console.log({x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
+			//console.log(firstPoint,secondPoint);
 			//drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'purple'); // this should be commented out for now it lets you see the path that the mouse takes when out of bounds.
 		}
 	}
