@@ -3,8 +3,8 @@
 var app = require('express').createServer(),
     io = require('socket.io').listen(app);
 
-//app.listen(15781); //8080 for localhost
-app.listen(8080); //8080 for localhost
+app.listen(15833); //8080 for localhost
+//app.listen(8080); //8080 for localhost
 
 
 app.get('/', function (req, res) {
@@ -220,7 +220,7 @@ function playerPath(player){
 //Collision Geometry END
 
 function checkDone(point){
-    if( (point.x > (canvasWidth - startingBlockWidth)) && (point.x > (canvasWidth - startingBlockWidth))){
+    if( (point.x > (canvasWidth - startingBlockWidth)) && (point.y > (canvasWidth - startingBlockWidth))){
         return true;
     }
     return false;
@@ -255,7 +255,11 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('disconnect', function () {
         var player = playerLookUp(socket);
-        player.game.disconnect(player);
+        if(player){
+            player.game.disconnect(player);
+        }else{
+            console.log("PLAYER NOT DEFINED ON DISCONNECT used to be, now being caught (this should now be resolved and not occur). BUG WARNING!  ");
+        }
         console.log('done with disconnect');
     });
 
@@ -264,7 +268,9 @@ io.sockets.on('connection', function (socket) {
         player.lastValidPoint = false;
 
         var path = playerPath(player);
-        path[ path.length-1 ].path = true;
+        if(path.length<0){
+            path[ path.length-1 ].path = true;
+        }
     });
 
 

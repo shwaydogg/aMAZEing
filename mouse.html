@@ -5,8 +5,8 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
-  //var socket = io.connect('http://amaze.nodester.com'); 
-  var socket = io.connect('http://localhost'); 
+  var socket = io.connect('http://amaze.nodester.com'); 
+  //var socket = io.connect('http://localhost'); 
 
 
   //var name = prompt('What is your nickname?', 'Write your name');
@@ -41,6 +41,11 @@
     	inGame = false;
 	});
 
+    socket.on('disconnect'),function(){
+    	inGame=false;
+    };
+
+    //server disconnect
     socket.on('drawLine',function(coord) {
     	 drawLine(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
     	//drawPoint(coord.x2,coord.y2,'red');
@@ -60,15 +65,18 @@
 
     socket.on('mazeComplete',function() {
     	if(!mazeWriter){
-    		alert('You finished the maze, congrats!  Close your window to disconnect or refresh to enter a new game.  MazeOn, Path Finder!');
+    		alert('You finished the maze, congrats!  Close your window to disconnect or refresh to enter a new game.  MazeOn, Path Finder! *Refresh the page to draw a maze for the same opponent.  (close your window to get a new opponent if there are any...) *Stay on the page if you wait for your opponent to refresh if you want to be the PathFinder.');
+    		inGame = false;
     	}else{
-    		alert('They finished!');
+    		alert('They finished! *Refresh the page to draw a maze for the same opponent.  (close your window to get a new opponent if there are any...) *Stay on the page if you wait for your opponent to refresh if you want to be the PathFinder.');
+    		inGame=false;
     	}
     	remove("block1");
 		remove("block2");
 		remove("block3");
 		remove("block4");
     });
+
 
     socket.on('consoleLog',function(log) {
 		console.log(log);
@@ -196,7 +204,7 @@
 		// if(!mazeWriter && pathStarted){
 		// 	alert('You finished the maze, congrats!  Close your window to disconnect or refresh to enter a new game.  MazeOn, Path Finder!');
 		// }
-		if(mazeWriter){
+		if(!mazeWriter){
 			alert("Stop messing around and get started on the green Starting Block!");
 		}
 	};
@@ -225,8 +233,9 @@
 	function mouseUp() {
 		if(mazeWriter) { //nothing should ever change on mouseup for mazeSolver
 			//console.log('I am the mazeWriter firstPoint = ',firstPoint);
-			
-			socket.emit('endLine', {name:name}); // this may be superfluous if always in line mode for mazeWriter...UPDATE: turns out this is not superfluous it is needed when the end of a mazemaker line is not valid. (this happens less often because in order for the mazeWriter to have collision they need to keep drawing after the pathfinder has started and intersect one of their lines.)
+			if(inGame){
+				socket.emit('endLine', {name:name}); // this may be superfluous if always in line mode for mazeWriter...UPDATE: turns out this is not superfluous it is needed when the end of a mazemaker line is not valid. (this happens less often because in order for the mazeWriter to have collision they need to keep drawing after the pathfinder has started and intersect one of their lines.)
+			}
 			
 			sendLine('end');
 			firstPoint = {};//this cannot happen before sendLine() is called!
