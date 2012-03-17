@@ -1,11 +1,12 @@
 <html>
 <head>
 <title>Get Mouse Coordinates</title>
+<link rel="stylesheet" type="text/css" href="main.css" media="all">
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
-  var socket = io.connect('http://amaze.nodester.com'); // http://localhost when running locally
-  //var socket = io.connect('http://localhost'); //  http://maze.nodester.com')
+  //var socket = io.connect('http://amaze.nodester.com'); // http://localhost when running locally
+  var socket = io.connect('http://localhost'); //  http://maze.nodester.com')
 
 
   //var name = prompt('What is your nickname?', 'Write your name');
@@ -58,61 +59,34 @@
 	});
 
   });
-
-
-
 </script>
-<script language="javascript">
 
-
-
-</script>
 
 
 </head>
 
-<body style="background-color:navy;">
-	<div id="mouseCoord" style="background-color:white;">Mouse Coordinates position will be displayed here.</div>
-	<div id="old_xy" style="background-color:white;">old xy displayed here.</div>
-	<button onclick="setMode('drag') ">Input Drag</button>
-	<button onclick="setMode('line') ">Input Line</button>
+<body>
+	<div id="mouseCoord">Mouse Coordinates position will be displayed here.</div>
+
 	<br/>
-	<div id="canvas-container" style="position:relative; width:600px; height:600px;" >
-		<canvas id="can" width="600" height="600" style="background-color:white;"></canvas>
-		<div id="block1" style="height:0px; width:600px; background:black; z-index:999999; position:absolute; 
-								top:0px; left:0px;
+	<div id="canvas-container"  >
+		<canvas id="can"></canvas>
+		<div id="block1" > </div>
+		<div id="block2" > </div>
+		<div id="block3" > </div>
+		<div id="block4" > </div>
 
-								-moz-box-shadow:    3px 0px 5px 6px #000;
-  								-webkit-box-shadow: 3px 0px 5px 6px #000;
-  								box-shadow:         3px 0px 5px 6px #000;
-
-								"> </div>
-		<div id="block2" style="height:600px; width:0px; background:black; z-index:999999; position:absolute; 
-								top:0px; right:0px;
-
-								-moz-box-shadow:    0px 3px 5px 6px #000;
-  								-webkit-box-shadow: 0px 3px 5px 6px #000;
-  								box-shadow:         0px 3px 5px 6px #000;
-
-								"> </div>
-		<div id="block3" style="height:0px; width:600px; background:black; z-index:999999; position:absolute; 
-								bottom:0px; right:0px;
-
-								-moz-box-shadow:    -3px 0px 5px 6px #000;
-  								-webkit-box-shadow: -3px 0px 5px 6px #000;
-  								box-shadow:         -3px 0px 5px 6px #000;
-
-								"> </div>
-		<div id="block4" style="height:600px; width:0px; background:black; z-index:999999; position:absolute; 
-								bottom:0px; left:0px;
-
-								-moz-box-shadow:    0px -3px 5px 6px #000;
-  								-webkit-box-shadow: 0px -3px 5px 6px #000;
-  								box-shadow:         0px -3px 5px 6px #000;
-
-								"> </div>
 	</div>
-\<script type="text/javascript">
+<ul class="control-buttons">
+	<li>
+		<button class="punch" onclick="setMode('drag') ">Input Curvey</button> 
+	</li>
+	<li>
+		<button class="punch" conclick="setMode('line') ">Input Line</button>
+	</li>
+</ul>
+<div class="bottom-spacer"></div>
+<script type="text/javascript">
 //Canvas Code: BEGIN
 {
 
@@ -248,8 +222,6 @@
 	function getPoint() {
 			ev = window.event;
 			document.getElementById("mouseCoord").innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
-			document.getElementById("old_xy").innerHTML = "Old_xy"+old_xy; 
-
 			var canvas = document.getElementById('can');
 			var canvasOffSet = findPos(canvas); 
 
