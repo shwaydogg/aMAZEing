@@ -22,8 +22,6 @@ var games = {};
 
 var waitingPlayer = false;
 
-var roomNames = ['first','second','third','fourth','fifth','sixth','seventh'];
-
 function Player(socket){ //to replace users
     this.socket = socket;
     this.room = false;
@@ -55,8 +53,8 @@ function GameRoom(player1,player2,room){
     player1.socket.join(room);
     player2.socket.join(room);
 
-    player1.socket.emit('startGameMAzeWriter');
-    player2.socket.emit('startGamePathFinder');
+    player1.socket.emit('startGameMAzeWriter', room);
+    player2.socket.emit('startGamePathFinder', room);
 }
 
 GameRoom.prototype.disconnect = function(disconnectedPlayer){
@@ -230,7 +228,7 @@ function freePlayer(socket){
         socket.emit('ready');
     }else{
         //There is a player waiting lets make a new gameRoom for these players
-        var roomName = roomNames[numGames];
+        var roomName = socket.id;
         numGames++;
         games[roomName] = new GameRoom(new Player(socket), waitingPlayer, roomName);
     

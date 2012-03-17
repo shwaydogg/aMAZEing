@@ -20,20 +20,20 @@
     	console.log("Please be patient; you'll be able to play as soon as an opponent arrives and joins your game!");
     });
 
-    socket.on('startGameMAzeWriter', function() {
+    socket.on('startGameMAzeWriter', function(room) {
     	clearCanvas();
     	inGame = true;
     	mazeWriter = true; // set the second player to join a game to be the maze writer, not the maze traverser
-    	console.log("GET YOUR MAZE ON!  start playing jock jams");
+    	document.getElementById("room-name").innerHTML="Get your Maze On, MazeMaker! You're in room: " +room;
     });
 
-    socket.on('startGamePathFinder', function() {
-    	console.log("Let the games begin, good luck finding your way out... PathFinder!");
+    socket.on('startGamePathFinder', function(room) {
     	clearCanvas();
     	inGame = true;
     	mouseDown = false;
     	mazeWriter = false;
    		document.getElementById("canvas-container").style.cursor='none';
+   		document.getElementById("room-name").innerHTML="Light the way...PathFinder!  You are in room: "+room;
 		old_xy = [];
     });
 
@@ -67,6 +67,7 @@
 
 <body>
 	<h1>&Delta;maze Amaze</h1>
+	<h2 id="room-name"></h2>
 	<div id="mouseCoord">Mouse Coordinates position will be displayed here.</div>
 	<br/>
 	<div id="canvas-container" class="shadow">
@@ -202,7 +203,7 @@
 			alert('input mode has been set to'+ mode);
 		}
 		else{
-			alert('you are not the mazeWriter, No cheating! ')
+			alert('you are not the MazeMaker, No cheating! ')
 		}
 	}
 
