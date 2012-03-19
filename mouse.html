@@ -72,10 +72,10 @@
 		// remove("block3");
 		// remove("block4");
 
-		 getElementById("block1").style.height = 0;
-		 getElementById("block2").style.width  = 0;
-		 getElementById("block3").style.height = 0;
-		 getElementById("block4").style.width  = 0;
+		 document.getElementById("block1").style.height = 0;
+		 document.getElementById("block2").style.width  = 0;
+		 document.getElementById("block3").style.height = 0;
+		 document.getElementById("block4").style.width  = 0;
 
     });
 
@@ -194,7 +194,7 @@
 
 	document.getElementById("startingBlock").onmousedown=onStartingBlock;
 	document.getElementById("endBlock").onmousemove=onExit;
-never
+	
 	function onStartingBlock(){
 		if(!mazeWriter && !pathStarted){
 			pathStarted = true;
