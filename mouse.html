@@ -16,10 +16,6 @@
 
   socket.on('connect', function () {
 
-    socket.on('ready', function() {
-    	console.log("Please be patient; you'll be able to play as soon as an opponent arrives and joins your game!");
-    });
-
     socket.on('startGameMAzeWriter', function(room) {
     	clearCanvas();
     	inGame = true;
@@ -59,9 +55,9 @@
     	 drawLine(line.x1,line.y1,line.x2,line.y2, 'green');
     });
 
-    function remove(id){
-	    return (elem=document.getElementById(id)).parentNode.removeChild(elem);
-	}
+ //    function remove(id){
+	//     return (elem=document.getElementById(id)).parentNode.removeChild(elem);
+	// }
 
     socket.on('mazeComplete',function() {
     	if(!mazeWriter){
@@ -71,10 +67,16 @@
     		alert('They finished! *Refresh the page to draw a maze for the same opponent.  (close your window to get a new opponent if there are any...) *Stay on the page if you wait for your opponent to refresh if you want to be the PathFinder.');
     		inGame=false;
     	}
-    	remove("block1");
-		remove("block2");
-		remove("block3");
-		remove("block4");
+  //   	remove("block1");
+		// remove("block2");
+		// remove("block3");
+		// remove("block4");
+
+		 getElementById("block1").style.height = 0;
+		 getElementById("block2").style.width  = 0;
+		 getElementById("block3").style.height = 0;
+		 getElementById("block4").style.width  = 0;
+
     });
 
 
@@ -192,7 +194,7 @@
 
 	document.getElementById("startingBlock").onmousedown=onStartingBlock;
 	document.getElementById("endBlock").onmousemove=onExit;
-
+never
 	function onStartingBlock(){
 		if(!mazeWriter && !pathStarted){
 			pathStarted = true;
@@ -210,7 +212,6 @@
 	};
 
 	function mouseDown() {
-		//console.log('mousedown!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 		firstPoint = getPoint();
 		isMouseDown = true;
 	}
@@ -220,7 +221,6 @@
 				if(!mazeWriter || isMouseDown){
 					sendLine();	
 				}
-				//console.log(firstPoint);
 				if(isMouseDown){
 					firstPoint = getPoint();//this cannot happen before sendLine is called!
 				}
@@ -232,16 +232,12 @@
 	}
 	function mouseUp() {
 		if(mazeWriter) { //nothing should ever change on mouseup for mazeSolver
-			//console.log('I am the mazeWriter firstPoint = ',firstPoint);
 			if(inGame){
 				socket.emit('endLine', {name:name}); // this may be superfluous if always in line mode for mazeWriter...UPDATE: turns out this is not superfluous it is needed when the end of a mazemaker line is not valid. (this happens less often because in order for the mazeWriter to have collision they need to keep drawing after the pathfinder has started and intersect one of their lines.)
 			}
-			
 			sendLine('end');
 			firstPoint = {};//this cannot happen before sendLine() is called!
-			console.log(' firstPoint = ',firstPoint);
 			isMouseDown = false;
-
 		}
 	}
 

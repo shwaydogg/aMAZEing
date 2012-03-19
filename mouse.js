@@ -241,7 +241,6 @@ function freePlayer(socket){
     if(!waitingPlayer){
         //There are an even number of players add this player to the player queue until there is another
         waitingPlayer = new Player(socket);
-        socket.emit('ready');
     }else{
         //There is a player waiting lets make a new gameRoom for these players
         var roomName = socket.id;
