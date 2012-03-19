@@ -2,9 +2,10 @@
 
 var app = require('express').createServer(),
     io = require('socket.io').listen(app);
-
+    
+var port = process.env.PORT || 8080;
 //app.listen(15834); //8080 for localhost
-app.listen(8080); //8080 for localhost
+app.listen(port); //8080 for localhost
 
 
 app.get('/', function (req, res) {
