@@ -2,11 +2,15 @@
 
 var app = require('express').createServer(),
     io = require('socket.io').listen(app);
-    
+
 var port = process.env.PORT || 8080;
 //app.listen(15834); //8080 for localhost
 app.listen(port); //8080 for localhost
 
+io.configure(function () { 
+  io.set("transports", ["xhr-polling"]); 
+  io.set("polling duration", 10); 
+});
 
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/mouse.html');
