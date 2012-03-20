@@ -1,1 +1,1 @@
-web: node mouse.js
+web: node maze.js

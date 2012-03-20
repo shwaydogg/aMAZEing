@@ -16,7 +16,7 @@
     } 
   ],
   "scripts": {
-    "start": "node mouse.js"
+    "start": "node maze.js"
   },
   "engines": {
     "node": "0.6.12",
