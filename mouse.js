@@ -309,8 +309,9 @@ io.sockets.on('connection', function (socket) {
                 }
                 else{
                     io.sockets.in(player.room).emit('drawPathLine',msgData);
-                    if(checkDone(pointB)){
+                    if(checkDone(pointB) && !player.game.gameOver){
                         io.sockets.in(player.room).emit('mazeComplete');
+                        player.game.gameOver = true;
                     }
                 }
 

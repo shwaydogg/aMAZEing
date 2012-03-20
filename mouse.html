@@ -59,7 +59,6 @@
     //server disconnect
     socket.on('drawLine',function(coord) {
     	 drawLine(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
-    	//drawPoint(coord.x2,coord.y2,'red');
     });
 
     socket.on('drawMazeLine',function(line) {
@@ -82,10 +81,6 @@
     		alert('They finished! Refresh the page to start a new game.');
     		inGame=false;
     	}
-  //   	remove("block1");
-		// remove("block2");
-		// remove("block3");
-		// remove("block4");
 
 		 document.getElementById("block1").style.height = 0;
 		 document.getElementById("block2").style.width  = 0;
@@ -93,11 +88,6 @@
 		 document.getElementById("block4").style.width  = 0;
 
     });
-
-
-    socket.on('consoleLog',function(log) {
-		console.log(log);
-	});
 
   });
 </script>
