@@ -6,34 +6,50 @@
 <script>
 
   //var socket = io.connect('http://amaze.nodester.com'); 
-
+  //var socket = io.connect('http://localhost');
   var socket = io.connect('http://amazeing.herokuapp.com/'); 
 
-  //var name = prompt('What is your nickname?', 'Write your name');
   var connected = false;
   var mazeWriter = false;
   var inGame = false;
-
   socket.on('connect', function () {
+Connery
+  	socket.on('roomOccupied', function(){
+  		alert("That room is already occupied! Don't you have any manners?  Knock first when you pick your new room");
+  	});
 
-    socket.on('startGameMAzeWriter', function(room) {
+  	socket.on('waitingRoom',function(room){
+  		console.log('In watingRoom');
+  		document.getElementById("room-name").innerHTML=
+  					  "Welcome to the waiting room for: <span class='green'>" +room 
+  					+ "</span><br /> Please be patient or nudge a buddy to join your room";
+  		document.getElementById("roomInput").style.display="none";
+  	});
+
+    socket.on('startGameMazeWriter', function(room) {
+    	document.getElementById("inGame").style.display="inline";
+    	document.getElementById("roomInput").style.display="none";
     	clearCanvas();
     	inGame = true;
     	mazeWriter = true; // set the second player to join a game to be the maze writer, not the maze traverser
-    	document.getElementById("room-name").innerHTML="Get your Maze On, Δrchitect!<br/><i>You have two minutes to draw a maze that takes me one minute to solve.</i> <br/> You're in room: " +room;
+    	document.getElementById("room-name").innerHTML="Get your Maze On, Δrchitect!<br/><i>You have two minutes to draw a maze that takes me one minute to solve.</i> <br/> You're in room: <span class='green'>" +room + "</span>";
     });
 
     socket.on('startGamePathFinder', function(room) {
+    	document.getElementById("inGame").style.display="inline";
+    	document.getElementById("roomInput").style.display="none";
+    	document.getElementById("control-buttons").style.display="none";
     	clearCanvas();
     	inGame = true;
     	mouseDown = false;
     	mazeWriter = false;
    		document.getElementById("canvas-container").style.cursor='none';
-   		document.getElementById("room-name").innerHTML="Light the way...PathFinder!  You are in room: "+room;
+   		document.getElementById("room-name").innerHTML="Light the way...PathFinder!<br/>  You are in room: <span class='green'>" +room + "</span>";
 		old_xy = [];
     });
 
     socket.on('otherPlayerDisconnect',function(log) {
+    	alert('The other player disconnected.  Refresh the page to start a new game.');
     	inGame = false;
 	});
 
@@ -61,10 +77,10 @@
 
     socket.on('mazeComplete',function() {
     	if(!mazeWriter){
-    		alert('You finished the maze, congrats!  Close your window to disconnect or refresh to enter a new game.  MazeOn, Path Finder! *Refresh the page to draw a maze for the same opponent.  (close your window to get a new opponent if there are any...) *Stay on the page if you wait for your opponent to refresh if you want to be the PathFinder.');
+    		alert('You finished the maze, congrats!  Refresh the page to start a new game.');
     		inGame = false;
     	}else{
-    		alert('They finished! *Refresh the page to draw a maze for the same opponent.  (close your window to get a new opponent if there are any...) *Stay on the page if you wait for your opponent to refresh if you want to be the PathFinder.');
+    		alert('They finished! Refresh the page to start a new game.');
     		inGame=false;
     	}
   //   	remove("block1");
@@ -96,32 +112,55 @@
 	<h2 id="room-name"></h2>
 	<div id="mouseCoord">Mouse Coordinates position will be displayed here.</div>
 	<br/>
-	<div id="canvas-container" class="shadow">
-		<canvas id="can" width="600" height="600"></canvas>
-		<div id="startingBlock">ENTER</div>
-		<div id="block1" > </div>
-		<div id="block2" > </div>
-		<div id="block3" > </div>
-		<div id="block4" > </div>
-		<div id="endBlock">EXIT</div>
- 
+	<div id="roomInput">
+		Room Name: 
+		<input type="text" id="roomNameInput" name="roomName" value="Ser Sean Connery" 
+				onkeypress="searchKeyPress(event,'roomSumbitButton');" />
+		<button id="roomSumbitButton" class="punch" onclick="roomCheck()";> Enter Room </button>
 	</div>
-	<ul class="control-buttons">
-		<li>
-			<button class="punch" onclick="setMode('drag') ">Curvey</button> 
-		</li>
-		<li>
-			<button class="punch" onclick="setMode('line') ">Line</button>
-		</li>
-	</ul>
+	<div id="inGame">
+		<div id="canvas-container" class="shadow">
+			<canvas id="can" width="600" height="600"></canvas>
+			<div id="startingBlock">ENTER</div>
+			<div id="block1"></div>
+			<div id="block2"></div>
+			<div id="block3"></div>
+			<div id="block4"></div>
+			<div id="endBlock">EXIT</div>
+		</div>
+		<ul id="control-buttons" class="control-buttons">
+			<li>
+				<button class="punch" onclick="setMode('drag') ">Curvey</button> 
+			</li>
+			<li>
+				<button class="punch" onclick="setMode('line') ">Line</button>
+			</li>
+		</ul>
+	</div>
 	<div class="bottom-spacer"></div>
 
 
 
 <script type="text/javascript">
-//Canvas Code: BEGIN
-{
 
+	function searchKeyPress(e,buttonID){
+        // look for window.event in case event isn't passed in
+        if (typeof e == 'undefined' && window.event) { e = window.event; }
+        if (e.keyCode == 13) // 13 is the return key 
+        {
+            document.getElementById(buttonID).click();
+        }
+    }
+
+	function roomCheck(){
+		console.log('buttonpressed');
+		console.log(document.getElementById('roomNameInput').value);
+		socket.emit('enterGame', document.getElementById('roomNameInput').value );
+	}
+
+
+
+//Canvas Code: BEGIN
 	var canWidth = 600;
 	var canHeight = canWidth;
 	var slitWidth = 30;
@@ -178,7 +217,6 @@
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 		}
 	}
-}
 //Canvas Code: END
 
 //Mouse Events and Sending Lines: BEGIN
@@ -194,7 +232,7 @@
 
 	document.getElementById("startingBlock").onmousedown=onStartingBlock;
 	document.getElementById("endBlock").onmousemove=onExit;
-	
+
 	function onStartingBlock(){
 		if(!mazeWriter && !pathStarted){
 			pathStarted = true;

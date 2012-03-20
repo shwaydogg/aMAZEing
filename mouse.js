@@ -1,113 +1,132 @@
-"use strict";
+//BEGIN: Initialization
+    "use strict";
 
-var app = require('express').createServer(),
-    io = require('socket.io').listen(app);
+    var app = require('express').createServer(),
+        io = require('socket.io').listen(app);
 
-var port = process.env.PORT || 8080;
-//app.listen(15834); //8080 for localhost
-app.listen(port); //8080 for localhost
+    var port = process.env.PORT || 8080;//8080 for localhost
+    app.listen(port);
 
-io.configure(function () { 
-  io.set("transports", ["xhr-polling"]); 
-  io.set("polling duration", 10); 
-});
+    io.configure(function () { 
+      io.set("transports", ["xhr-polling"]); 
+      io.set("polling duration", 10); 
+    });
 
-app.get('/', function (req, res) {
-  res.sendfile(__dirname + '/mouse.html');
-});
+    app.get('/', function (req, res) {
+      res.sendfile(__dirname + '/mouse.html');
+    });
 
-app.get('/main.css', function (req, res) {
-  res.sendfile(__dirname + '/main.css');
-});
+    app.get('/main.css', function (req, res) {
+      res.sendfile(__dirname + '/main.css');
+    });
+//END: Initialization
 
-
-var numGames = 0;
-var games = {};
-
-
-
-var canvasWidth=600;
-var startingBlockWidth = 45;
+//BEGIN: Game Structures
+    var games = {};
+    var gameQueue = {};
 
 
-var waitingPlayer = false;
+    var canvasWidth=600;
+    var startingBlockWidth = 45;
 
-function Player(socket){ //to replace users
-    this.socket = socket;
-    this.room = false;
-    this.mazeWriter = false;
-    //this.points = []; this will now be handled by Game
-    this.lastValidPoint = false;
-    this.game = false;
-    this.otherPlayer= false; //their socket
-}
 
-function GameRoom(player1,player2,room){
-    this.player1 = player1;
-    this.player2 = player2;
-    this.mazePath = [];
-    this.trailPath = [];
-    this.room = room; //socket.io room
-
-    player1.mazeWriter = true;
-
-    player1.game = this;
-    player2.game = this;
-
-    player1.room = room;
-    player2.room = room;
-
-    player1.otherPlayer = player2;
-    player2.otherPlayer = player1;
-
-    player1.socket.join(room);
-    player2.socket.join(room);
-
-    player1.socket.emit('startGameMAzeWriter', room);
-    player2.socket.emit('startGamePathFinder', room);
-}
-
-GameRoom.prototype.disconnect = function(disconnectedPlayer){
-    if(this.player1 === disconnectedPlayer ){
-        this.player2.socket.emit('otherPlayerDisconnect');
-        freePlayer(this.player2.socket);
-    }else{
-        this.player1.socket.emit('otherPlayerDisconnect');
-        freePlayer(this.player1.socket);
+    function Player(socket,room){ //to replace users
+        this.socket = socket;
+        this.room = room;
+        //this.mazeWriter;
+        //this.points = []; this will now be handled by Game
+        //this.lastValidPoint = null;
+        //this.game;
+        //this.otherPlayer; //their socket
     }
 
-    this.mazePath = false;
-    this.trailPath = false;
-    this.player1 = false;
-    this.player2 = false;
-};
+    function GameRoom(player1,player2,room){
+        this.player1 = player1;
+        this.player2 = player2;
+        this.mazePath = [];
+        this.trailPath = [];
+        this.room = room; //socket.io room
 
-//takes a socket returns a player
-// i am going to for now make this a loop
-// will hopefully make a hash to make O(n) operation in future
-//will only find players that are in games fyi
-//this should perhaps become part of a prototype?
-function playerLookUp(socket){
-    for( var game in games ){
-        if( games[game].player1.socket == socket){
-            return games[game].player1;
+        player1.mazeWriter = true;
+
+        player1.game = this;
+        player2.game = this;
+
+        player1.room = room;
+        player2.room = room;
+
+        player1.otherPlayer = player2;
+        player2.otherPlayer = player1;
+
+        player1.socket.join(room);
+        player2.socket.join(room);
+
+        player1.socket.emit('startGameMazeWriter', room);
+        player2.socket.emit('startGamePathFinder', room);
+    }
+
+    GameRoom.prototype.disconnect = function(disconnectedPlayer){
+        if(this.player1 === disconnectedPlayer ){
+            delete this.player2.room;
+            this.player2.socket.emit('otherPlayerDisconnect');
+        }else{
+            delete this.player1.room;
+            this.player1.socket.emit('otherPlayerDisconnect');
         }
-        if( games[game].player2.socket == socket){
-            return games[game].player2;
+        delete games[disconnectedPlayer.room];
+        delete this.mazePath; //previously had these set to false rather than deleting
+        delete this.trailPath;
+        delete this.player1;
+        delete this.player2;
+        delete this.room;
+
+    };
+//END: Game Structures
+
+//BEGIN: Game Structure Functions
+
+    //takes a socket returns a player
+    // i am going to for now make this a loop
+    // will hopefully make a hash to make O(n) operation in future
+    //will only find players that are in games fyi
+    //this should perhaps become part of a prototype?
+    function playerLookUp(socket){
+        for( var game in games ){
+            if( games[game].player1.socket == socket){
+                return games[game].player1;
+            }
+            else if( games[game].player2.socket == socket){
+                return games[game].player2;
+            }   
+        }
+        for( var game in gameQueue ){
+            if( gameQueue[game].socket == socket){
+                return gameQueue[game];
+            }
+            else if( gameQueue[game].socket == socket){
+                return gameQueue[game];
+            }
+        }
+        console.log('no player found');
+        return false; //no player found
+    }
+
+    function playerPath(player){
+        if(player.mazeWriter){
+            return player.game.mazePath;
+        }
+        else{
+            return player.game.trailPath;
         }
     }
-    console.log('no player found');
-    return false; //no player found
-}
 
-function playerPath(player){
-    if(player.mazeWriter){
-        return player.game.mazePath;
+    function checkDone(point){
+        if( (point.x > (canvasWidth - startingBlockWidth)) && (point.y > (canvasWidth - startingBlockWidth))){
+            return true;
+        }
+        return false;
     }
-    else{
-        return player.game.trailPath;
-    }
-}
+//END: Game Structure Functions
 
 //Collision Geometry BEGIN:
 
@@ -221,46 +240,38 @@ function playerPath(player){
             return ((line2.b - line1.b) / (line1.m - line2.m));
         }
     }
-
 //Collision Geometry END
 
-function checkDone(point){
-    if( (point.x > (canvasWidth - startingBlockWidth)) && (point.y > (canvasWidth - startingBlockWidth))){
-        return true;
-    }
-    return false;
-}
-
-function freePlayer(socket){
-    var rooms = io.sockets.manager.rooms;
-
-    console.log(rooms);
-    console.log(typeof rooms);
-
-
-    if(!waitingPlayer){
-        //There are an even number of players add this player to the player queue until there is another
-        waitingPlayer = new Player(socket);
-    }else{
-        //There is a player waiting lets make a new gameRoom for these players
-        var roomName = socket.id;
-        numGames++;
-        games[roomName] = new GameRoom(new Player(socket), waitingPlayer, roomName);
-    
-        socket.emit('inGame');
-        waitingPlayer.socket.emit('newPlayer',socket.id);
-        waitingPlayer = false;
-    }
-}
-
+//BEGIN: On Connection
 io.sockets.on('connection', function (socket) {
 
-    freePlayer(socket);
+    socket.on('enterGame', function(room){
+        if(games[room]){
+            socket.emit('roomOccupied');
+            console.log('ENTERGAME : occupied room');
+        }
+        else if(gameQueue[room]){
+            //Create and join game
+            console.log("ENTERGAME : found partner in queue");
+            games[room] = new GameRoom(gameQueue[room], new Player(socket), room);
+            delete gameQueue[room];
+        }
+        else{
+            //add room to the queue of rooms
+            console.log("ENTERGAME : added new game");
+            gameQueue[room] = new Player(socket, room);
+            socket.emit('waitingRoom',room);
+        }
+    });
 
     socket.on('disconnect', function () {
         var player = playerLookUp(socket);
         if(player){
-            player.game.disconnect(player);
+            if(player.game){
+                player.game.disconnect(player);
+            }else{
+                delete gameQueue[player.room];
+            }
         }else{
             console.log("PLAYER NOT DEFINED ON DISCONNECT used to be, now being caught (this should now be resolved and not occur). BUG WARNING!  ");
         }
@@ -269,14 +280,13 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('endLine', function () {
         var player = playerLookUp(socket);
-        player.lastValidPoint = false;
+        player.lastValidPoint = null;
 
         var path = playerPath(player);
         if(path.length<0){
             path[ path.length-1 ].path = true;
         }
     });
-
 
     socket.on('sendLine', function (msgData) { //we are receiving the line the client is sending it.
         var player = playerLookUp(socket);
@@ -290,7 +300,7 @@ io.sockets.on('connection', function (socket) {
                 io.sockets.in(player.room).emit('collision');
             }else{
                 if(player.mazeWriter){
-                    io.sockets.in(player.room).emit('drawMazeLine',{
+                     io.sockets.in(player.room).emit('drawMazeLine',{
                                                 x1:pointA.x,
                                                 y1:pointA.y,
                                                 x2:pointB.x,
@@ -299,7 +309,6 @@ io.sockets.on('connection', function (socket) {
                 }
                 else{
                     io.sockets.in(player.room).emit('drawPathLine',msgData);
-                    console.log("should have emitted drawPathLine");
                     if(checkDone(pointB)){
                         io.sockets.in(player.room).emit('mazeComplete');
                     }
@@ -318,20 +327,17 @@ io.sockets.on('connection', function (socket) {
                 path.push(pointB);
             }
         }
-
     });
-
 });
+//END: On Connection
 
-exports.slope = slope;
-exports.yIntercept = yIntercept;
-exports.lineCollide = lineCollide;
-exports.boeIntersect = boeIntersect;
-exports.pointOnLine = pointOnLine;
-exports.pointOnLineSeg = pointOnLineSeg;
-exports.getLineSpecs = getLineSpecs;
-exports.counterClockwise = counterClockwise;
-
-//https://developer.mozilla.org/en/Canvas_tutorial
-//http://stackoverflow.com/questions/4647348/send-message-to-specific-client-with-socket-io-and-node-js
-//http://codeflow.org/entries/2010/aug/22/html5-canvas-and-the-flying-dots/
+//BEGIN: For mocha Tests
+    exports.slope = slope;
+    exports.yIntercept = yIntercept;
+    exports.lineCollide = lineCollide;
+    exports.boeIntersect = boeIntersect;
+    exports.pointOnLine = pointOnLine;
+    exports.pointOnLineSeg = pointOnLineSeg;
+    exports.getLineSpecs = getLineSpecs;
+    exports.counterClockwise = counterClockwise;
+//END: For mocha tests
