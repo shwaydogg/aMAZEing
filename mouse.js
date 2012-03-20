@@ -65,6 +65,15 @@
         player2.socket.emit('startGamePathFinder', room);
     }
 
+    GameRoom.prototype.endGame = function(){
+        delete games[this.room];
+        delete this.mazePath; //previously had these set to false rather than deleting
+        delete this.trailPath;
+        delete this.player1;
+        delete this.player2;
+        delete this.room;
+    };
+
     GameRoom.prototype.disconnect = function(disconnectedPlayer){
         if(this.player1 === disconnectedPlayer ){
             delete this.player2.room;
@@ -73,14 +82,10 @@
             delete this.player1.room;
             this.player1.socket.emit('otherPlayerDisconnect');
         }
-        delete games[disconnectedPlayer.room];
-        delete this.mazePath; //previously had these set to false rather than deleting
-        delete this.trailPath;
-        delete this.player1;
-        delete this.player2;
-        delete this.room;
-
+        disconnectedPlayer.game.endGame();
     };
+
+
 //END: Game Structures
 
 //BEGIN: Game Structure Functions
@@ -112,11 +117,13 @@
     }
 
     function playerPath(player){
-        if(player.mazeWriter){
-            return player.game.mazePath;
-        }
-        else{
-            return player.game.trailPath;
+        if(player){
+            if(player.mazeWriter){
+                return player.game.mazePath;
+            }
+            else{
+                return player.game.trailPath;
+            }
         }
     }
 
@@ -310,8 +317,9 @@ io.sockets.on('connection', function (socket) {
                 else{
                     io.sockets.in(player.room).emit('drawPathLine',msgData);
                     if(checkDone(pointB) && !player.game.gameOver){
-                        io.sockets.in(player.room).emit('mazeComplete');
                         player.game.gameOver = true;
+                        player.game.endGame();
+                        io.sockets.in(player.room).emit('mazeComplete');
                     }
                 }
 
