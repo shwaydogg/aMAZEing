@@ -13,12 +13,17 @@
     });
 
     app.get('/', function (req, res) {
-      res.sendfile(__dirname + '/mouse.html');
+      res.sendfile(__dirname + '/maze.html');
     });
 
     app.get('/main.css', function (req, res) {
       res.sendfile(__dirname + '/main.css');
     });
+
+    app.get('/d3/d3.v2.js', function (req, res) {
+      res.sendfile(__dirname + '/d3/d3.v2.js');
+    });
+
 //END: Initialization
 
 //BEGIN: Game Structures
@@ -33,6 +38,7 @@
     function Player(socket,room){ //to replace users
         this.socket = socket;
         this.room = room;
+        this.points = 0;
         //this.mazeWriter;
         //this.points = []; this will now be handled by Game
         //this.lastValidPoint = null;
@@ -54,6 +60,9 @@
 
         player1.room = room;
         player2.room = room;
+
+        //points1 = 0;
+        //points2 = 0;
 
         player1.otherPlayer = player2;
         player2.otherPlayer = player1;
@@ -84,8 +93,6 @@
         }
         disconnectedPlayer.game.endGame();
     };
-
-
 //END: Game Structures
 
 //BEGIN: Game Structure Functions
@@ -135,7 +142,17 @@
     }
 //END: Game Structure Functions
 
-//Collision Geometry BEGIN:
+//BEGIN:Points
+    Player.prototype.addPoint = function(increment){
+        if(increment){
+            this.points += increment;
+        }else{
+            this.points++;
+        }
+    };
+//END: Points
+
+//BEGIN: Collision Geometry
 
     function pixelCollide(current_point, current_user) {
 
@@ -247,7 +264,7 @@
             return ((line2.b - line1.b) / (line1.m - line2.m));
         }
     }
-//Collision Geometry END
+//END: Collision Geometry
 
 //BEGIN: On Connection
 io.sockets.on('connection', function (socket) {
@@ -305,6 +322,8 @@ io.sockets.on('connection', function (socket) {
             var pointA = player.lastValidPoint || {x:msgData.x1,y:msgData.y1};
             if (lineCollide(pointA, pointB, collisionPath)) {
                 io.sockets.in(player.room).emit('collision');
+                player.addPoint(-1);
+                player.otherPlayer.addPoint();
             }else{
                 if(player.mazeWriter){
                      io.sockets.in(player.room).emit('drawMazeLine',{
@@ -313,13 +332,16 @@ io.sockets.on('connection', function (socket) {
                                                 x2:pointB.x,
                                                 y2:pointB.y
                                                                         });
+                     player.addPoint(-1);
                 }
                 else{
                     io.sockets.in(player.room).emit('drawPathLine',msgData);
+                    player.addPoint(-1);
                     if(checkDone(pointB) && !player.game.gameOver){
                         player.game.gameOver = true;
                         player.game.endGame();
                         io.sockets.in(player.room).emit('mazeComplete');
+                        player.addPoint(1000);
                     }
                 }
 
@@ -336,6 +358,8 @@ io.sockets.on('connection', function (socket) {
                 path.push(pointB);
             }
         }
+        player.socket.emit('points', {you:player.points, opponent:player.otherPlayer.points});
+        player.otherPlayer.socket.emit('points', {you: player.otherPlayer.points, opponent:player.points});
     });
 });
 //END: On Connection

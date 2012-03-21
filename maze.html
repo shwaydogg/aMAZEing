@@ -69,6 +69,10 @@
     	 drawLine(line.x1,line.y1,line.x2,line.y2, 'green');
     });
 
+    socket.on('points',function(points){
+    	document.getElementById("points").innerHTML="Your points: "+ points.you +", Opponent's points: " + points.opponent; 
+    });
+
  //    function remove(id){
 	//     return (elem=document.getElementById(id)).parentNode.removeChild(elem);
 	// }
@@ -125,6 +129,8 @@
 				<button class="punch" onclick="setMode('line') ">Line</button>
 			</li>
 		</ul>
+		<div id="points">
+		</div>
 	</div>
 	<div class="bottom-spacer"></div>
 
@@ -312,8 +318,6 @@
 		}
 	}
 }
-//Mouse Events and Sending Lines: END
 
-</script>
 </body>
 </html>
