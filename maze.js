@@ -24,6 +24,26 @@
       res.sendfile(__dirname + '/d3/d3.v2.js');
     });
 
+    app.get('/d3maze.js', function (req, res) {
+      res.sendfile(__dirname + '/d3maze.js');
+    });
+
+    app.get('/canvas.js', function (req, res) {
+      res.sendfile(__dirname + '/canvas.js');
+    });
+
+    app.get('/mouseEvents.js', function (req, res) {
+      res.sendfile(__dirname + '/mouseEvents.js');
+    });
+
+    app.get('/ui.js', function (req, res) {
+      res.sendfile(__dirname + '/ui.js');
+    });
+
+    app.get('/mazeIO.js', function (req, res) {
+      res.sendfile(__dirname + '/mazeIO.js');
+    });
+
 //END: Initialization
 
 //BEGIN: Game Structures
@@ -52,8 +72,7 @@
         this.mazePath = [];
         this.trailPath = [];
         this.room = room; //socket.io room
-
-        player1.mazeWriter = true;
+        this.session = 0;
 
         player1.game = this;
         player2.game = this;
@@ -61,8 +80,8 @@
         player1.room = room;
         player2.room = room;
 
-        //points1 = 0;
-        //points2 = 0;
+        this.points1 = [];
+        this.points2 = [];
 
         player1.otherPlayer = player2;
         player2.otherPlayer = player1;
@@ -70,18 +89,123 @@
         player1.socket.join(room);
         player2.socket.join(room);
 
-        player1.socket.emit('startGameMazeWriter', room);
-        player2.socket.emit('startGamePathFinder', room);
+        this.initSession(2, true);
+
     }
 
-    GameRoom.prototype.endGame = function(){
-        delete games[this.room];
-        delete this.mazePath; //previously had these set to false rather than deleting
-        delete this.trailPath;
-        delete this.player1;
-        delete this.player2;
-        delete this.room;
+    GameRoom.prototype.initSession = function(pathFinder,dualPlay){
+
+        this.player1.points =  0;
+        this.player2.points =  0;
+        this.mazePath = [];
+        this.trailPath = [];
+        this.gameOver = false;
+
+        var thisGameRoom = this;
+
+        setTimeout(
+            function(){
+                    console.log("initSession");
+                    if(pathFinder == 2){
+                        //console.log(thisGameRoom);
+                        thisGameRoom.player1.mazeWriter = true;
+                        thisGameRoom.player2.mazeWriter = false;
+                        thisGameRoom.player2.socket.emit('startGamePathFinder', thisGameRoom.room);
+                        if(dualPlay){
+                            thisGameRoom.player1.socket.emit('startGameMazeWriter', thisGameRoom.room);
+                        }
+                        else{
+                            thisGameRoom.player1.socket.emit('watchMode', thisGameRoom.room);
+                        }
+                    }
+                    else{
+                        thisGameRoom.player2.mazeWriter = true;
+                        thisGameRoom.player1.mazeWriter = false;
+                        thisGameRoom.player1.socket.emit('startGamePathFinder', thisGameRoom.room);
+                        if(dualPlay){
+                            thisGameRoom.player2.socket.emit('startGameMazeWriter', thisGameRoom.room);
+                        }
+                        else{
+                            thisGameRoom.player2.socket.emit('watchMode', thisGameRoom.room);
+                        }
+                    }
+                },1000);
+
+
+        // setTimeout(
+        //     function(){
+        //         return function(){
+        //             console.log("initSession");
+        //             if(pathFinder == 2){
+        //                 console.log(this);
+        //                 this.player1.mazeWriter = true;
+        //                 this.player2.mazeWriter = false;
+        //                 this.player2.socket.emit('startGamePathFinder', this.room);
+        //                 if(dualPlay){
+        //                     this.player1.socket.emit('startGameMazeWriter', this.room);
+        //                 }
+        //                 else{
+        //                     this.player1.socket.emit('watchMode', this.room);
+        //                 }
+        //             }
+        //             else{
+        //                 this.player2.mazeWriter = true;
+        //                 this.player1.mazeWriter = false;
+        //                 this.player1.socket.emit('startGamePathFinder', this.room);
+        //                 if(dualPlay){
+        //                     this.player2.socket.emit('startGameMazeWriter', this.room);
+        //                 }
+        //                 else{
+        //                     this.player2.socket.emit('watchMode', this.room);
+        //                 }
+        //             }
+        //         };
+        //     }.call(this),10000);
+
+
+
     };
+
+    GameRoom.prototype.endSession = function(){
+        this.points1.push(this.player1.points);
+        this.points2.push(this.player2.points);
+        //inorder to do these saves need to write a copy function for arrays not going to deal with that now.
+            // this.game1.mazePath = this.mazePath;
+            // this.game1.trialPath = this.trailPath;
+
+        if(this.session === 0){
+            //player1 is going to go through the maze that player1 made
+            this.initSession(1,false);
+        }
+        else if(this.session == 1 ){
+            //Player2 is now the mazeWriter and player 1 will traverse the maze
+            this.initSession(1, true);
+        }
+        else if(this.session == 2 ){
+            //player2 is going to go through the maze that player2 made
+            this.initSession(2, false);
+        }
+        else if(this.session == 3){
+            //the game is actually over.  Everybody cleanup
+            this.deleteGame;
+        }
+        else{
+            console.log("ERROR THIS SHOULD NOT BE REACHED");
+        }
+        this.session++;
+    };
+
+
+    GameRoom.prototype.deleteGame = function(){
+            delete games[this.room];
+            delete this.mazePath;
+            delete this.trailPath;
+            delete this.player1;
+            delete this.player2;
+            delete this.room;
+    }
+
+
 
     GameRoom.prototype.disconnect = function(disconnectedPlayer){
         if(this.player1 === disconnectedPlayer ){
@@ -91,7 +215,7 @@
             delete this.player1.room;
             this.player1.socket.emit('otherPlayerDisconnect');
         }
-        disconnectedPlayer.game.endGame();
+        disconnectedPlayer.game.deleteGame();
     };
 //END: Game Structures
 
@@ -307,8 +431,8 @@ io.sockets.on('connection', function (socket) {
         player.lastValidPoint = null;
 
         var path = playerPath(player);
-        if(path.length<0){
-            path[ path.length-1 ].path = true;
+        if(path && path.length<=0){
+            path[ path.length-1 ].end = true;
         }
     });
 
@@ -320,12 +444,14 @@ io.sockets.on('connection', function (socket) {
 
         if(player && player.room){
             var pointA = player.lastValidPoint || {x:msgData.x1,y:msgData.y1};
+            console.log("pointa:",pointA);
             if (lineCollide(pointA, pointB, collisionPath)) {
                 io.sockets.in(player.room).emit('collision');
                 player.addPoint(-1);
-                player.otherPlayer.addPoint();
+                
             }else{
                 if(player.mazeWriter){
+                    player.otherPlayer.addPoint();
                      io.sockets.in(player.room).emit('drawMazeLine',{
                                                 x1:pointA.x,
                                                 y1:pointA.y,
@@ -339,7 +465,7 @@ io.sockets.on('connection', function (socket) {
                     player.addPoint(-1);
                     if(checkDone(pointB) && !player.game.gameOver){
                         player.game.gameOver = true;
-                        player.game.endGame();
+                        player.game.endSession(); //ends the minigame (session)
                         io.sockets.in(player.room).emit('mazeComplete');
                         player.addPoint(1000);
                     }
@@ -357,9 +483,10 @@ io.sockets.on('connection', function (socket) {
                 }
                 path.push(pointB);
             }
+            player.socket.emit('points', {you:player.points, opponent:player.otherPlayer.points});
+            player.otherPlayer.socket.emit('points', {you: player.otherPlayer.points, opponent:player.points});
         }
-        player.socket.emit('points', {you:player.points, opponent:player.otherPlayer.points});
-        player.otherPlayer.socket.emit('points', {you: player.otherPlayer.points, opponent:player.points});
+
     });
 });
 //END: On Connection

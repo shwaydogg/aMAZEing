@@ -1,106 +1,17 @@
 <html>
 <head>
-<title>The aMAZEing Δing-Maze</title>
-<link rel="stylesheet" type="text/css" href="main.css" media="all">
-<script src="/socket.io/socket.io.js"></script>
-<script>
-
-  //var socket = io.connect('http://amaze.nodester.com'); 
-  //var socket = io.connect('http://localhost');  //Uncomment this line to test locally!
-  var socket = io.connect('http://amazeing.herokuapp.com/'); 
-
-  var connected = false;
-  var mazeWriter = false;
-  var inGame = false;
-  socket.on('connect', function () {
-  	socket.on('roomOccupied', function(){
-  		alert("That room is already occupied! Don't you have any manners?  Knock first when you pick your new room");
-  	});
-
-  	socket.on('waitingRoom',function(room){
-  		console.log('In watingRoom');
-  		document.getElementById("room-name").innerHTML=
-  					  "Welcome to the waiting room for: <span class='green'>" +room 
-  					+ "</span><br /> Please be patient or nudge a buddy to join your room";
-  		document.getElementById("roomInput").style.display="none";
-  	});
-
-    socket.on('startGameMazeWriter', function(room) {
-    	document.getElementById("inGame").style.display="inline";
-    	document.getElementById("roomInput").style.display="none";
-    	clearCanvas();
-    	inGame = true;
-    	mazeWriter = true; // set the second player to join a game to be the maze writer, not the maze traverser
-    	document.getElementById("room-name").innerHTML="Get your Maze On, Δrchitect!<br/><i>You have two minutes to draw a maze that takes me one minute to solve.</i> <br/> You're in room: <span class='green'>" +room + "</span>";
-    });
-
-    socket.on('startGamePathFinder', function(room) {
-    	document.getElementById("inGame").style.display="inline";
-    	document.getElementById("roomInput").style.display="none";
-    	document.getElementById("control-buttons").style.display="none";
-    	clearCanvas();
-    	inGame = true;
-    	mouseDown = false;
-    	mazeWriter = false;
-   		document.getElementById("canvas-container").style.cursor='none';
-   		document.getElementById("room-name").innerHTML="Light the way...PathFinder!<br/>  You are in room: <span class='green'>" +room + "</span>";
-		old_xy = [];
-    });
-
-    socket.on('otherPlayerDisconnect',function(log) {
-    	alert('The other player disconnected.  Refresh the page to start a new game.');
-    	inGame = false;
-	});
-
-    socket.on('disconnect'),function(){
-    	inGame=false;
-    };
-
-    //server disconnect
-    socket.on('drawLine',function(coord) {
-    	 drawLine(coord.x1,coord.y1,coord.x2,coord.y2, 'red');
-    });
-
-    socket.on('drawMazeLine',function(line) {
-    	 drawLine(line.x1,line.y1,line.x2,line.y2, 'black');
-    });
-
-    socket.on('drawPathLine',function(line) {
-    	 drawLine(line.x1,line.y1,line.x2,line.y2, 'green');
-    });
-
-    socket.on('points',function(points){
-    	document.getElementById("points").innerHTML="Your points: "+ points.you +", Opponent's points: " + points.opponent; 
-    });
-
- //    function remove(id){
-	//     return (elem=document.getElementById(id)).parentNode.removeChild(elem);
-	// }
-
-    socket.on('mazeComplete',function() {
-    	if(!mazeWriter){
-    		alert('You finished the maze, congrats!  Refresh the page to start a new game.');
-    		inGame = false;
-    	}else{
-    		alert('They finished! Refresh the page to start a new game.');
-    		inGame=false;
-    	}
-
-		 document.getElementById("block1").style.height = 0;
-		 document.getElementById("block2").style.width  = 0;
-		 document.getElementById("block3").style.height = 0;
-		 document.getElementById("block4").style.width  = 0;
-
-    });
-
-  });
-</script>
-
-
-
+	<title>The aMAZEing Δing-Maze</title>
+	<link rel="stylesheet" type="text/css" href="main.css" media="all">
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="./mazeIO.js"></script>
+	<script type="text/javascript" src="./canvas.js"></script>
+	<script type="text/javascript" src="./mouseEvents.js"></script>
+	<script type="text/javascript" src="./ui.js"></script>
+	<script type="text/javascript" src="./d3/d3.v2.js"></script>
+	<script type="text/javascript" src="./d3maze.js"></script>
 </head>
 
-<body>
+<body onload="d3Init();">
 	<h1>Amaze Δmaze</h1>
 	<h2 id="room-name"></h2>
 	<div id="mouseCoord">Mouse Coordinates position will be displayed here.</div>
@@ -111,6 +22,11 @@
 				onkeypress="searchKeyPress(event,'roomSumbitButton');" />
 		<button id="roomSumbitButton" class="punch" onclick="roomCheck()";> Enter Room </button>
 	</div>
+	<div>
+		<span id="timerPhrase"></span>
+		<span id="timer"></span>
+		<span id="postTimerPhrase"></span>
+	</div>
 	<div id="inGame">
 		<div id="canvas-container" class="shadow">
 			<canvas id="can" width="600" height="600"></canvas>
@@ -119,6 +35,11 @@
 			<div id="block2"></div>
 			<div id="block3"></div>
 			<div id="block4"></div>
+			<div id="timerBlock"></div>
+			<div id="collisionBlock">
+				 No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking!  
+			
+			</div>
 			<div id="endBlock">EXIT</div>
 		</div>
 		<ul id="control-buttons" class="control-buttons">
@@ -133,191 +54,6 @@
 		</div>
 	</div>
 	<div class="bottom-spacer"></div>
-
-
-
-<script type="text/javascript">
-
-	function searchKeyPress(e,buttonID){
-        // look for window.event in case event isn't passed in
-        if (typeof e == 'undefined' && window.event) { e = window.event; }
-        if (e.keyCode == 13) // 13 is the return key 
-        {
-            document.getElementById(buttonID).click();
-        }
-    }
-
-	function roomCheck(){
-		console.log('buttonpressed');
-		console.log(document.getElementById('roomNameInput').value);
-		socket.emit('enterGame', document.getElementById('roomNameInput').value );
-	}
-
-
-
-//Canvas Code: BEGIN
-	var canWidth = 600;
-	var canHeight = canWidth;
-	var slitWidth = 30;
-	var slitHeight = slitWidth;
-
-	function clipper(point){
-		var obj=document.getElementById("block1");
-		obj.style.height=point.y - slitHeight;
-
-		var obj=document.getElementById("block2");
-		obj.style.width=(canWidth - point.x) - slitWidth;
-
-		var obj=document.getElementById("block3");
-		obj.style.height=(canHeight - point.y) - slitHeight;
-
-		var obj=document.getElementById("block4");
-		obj.style.width= point.x - slitWidth;
-
-	}
-
-	// hide canvase http://robertnyman.com/2011/07/26/using-the-html5-canvas-clip-method-to-hide-certain-content/
-	var canvas = document.getElementById('can');
-	var clipPoint;
-	function drawLine(x1,y1,x2,y2,color){
-		if(canvas.getContext){
-			var ctx = canvas.getContext('2d');
-			ctx.strokeStyle=color;
-			ctx.beginPath();
-			ctx.moveTo(x1,y1);
-			ctx.lineTo(x2,y2);
-			ctx.stroke();
-		}
-	}
-
-	function drawPoint(x,y,color){
-		if(canvas.getContext){
-			var ctx = canvas.getContext('2d');
-			ctx.strokeStyle=color;
-			ctx.beginPath();
-			dot(ctx,x,y,3,color);
-			ctx.stroke();
-		}
-	}
-
-	function dot(ctx,x,y,rad,color){
-		ctx.arc(x,y,rad,0,2*Math.PI,false);
-		ctx.fillStyle=color;
-		ctx.fill();
-	}
-
-	function clearCanvas(){
-		if(canvas.getContext){
-			var ctx = canvas.getContext('2d');
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-		}
-	}
-//Canvas Code: END
-
-//Mouse Events and Sending Lines: BEGIN
-{
-	var isMouseDown = false;
-	var inputMode = mazeWriter? 'line' : 'drag'; //'drag'||'line'
-	var firstPoint = {};
-	var pathStarted = false;
-
-	document.onmousedown=mouseDown;
-	document.onmouseup=mouseUp;
-	document.onmousemove=mouseMove;
-
-	document.getElementById("startingBlock").onmousedown=onStartingBlock;
-	document.getElementById("endBlock").onmousemove=onExit;
-
-	function onStartingBlock(){
-		if(!mazeWriter && !pathStarted){
-			pathStarted = true;
-		}
-	};
-
-	function onExit(){
-		// This needs to be handled by server
-		// if(!mazeWriter && pathStarted){
-		// 	alert('You finished the maze, congrats!  Close your window to disconnect or refresh to enter a new game.  MazeOn, Path Finder!');
-		// }
-		if(!mazeWriter && !pathStarted){
-			alert("Stop messing around and 'ENTER' on the red starting block!");
-		}
-	};
-
-	function mouseDown() {
-		firstPoint = getPoint();
-		isMouseDown = true;
-	}
-	function mouseMove(){
-		if(mazeWriter || pathStarted){
-			if(inputMode != 'line'){
-				if(!mazeWriter || isMouseDown){
-					sendLine();	
-				}
-				if(isMouseDown){
-					firstPoint = getPoint();//this cannot happen before sendLine is called!
-				}
-			}
-		}	
-		if(!mazeWriter && inGame){
-			clipper(getPoint());
-		}
-	}
-	function mouseUp() {
-		if(mazeWriter) { //nothing should ever change on mouseup for mazeSolver
-			if(inGame){
-				socket.emit('endLine', {name:name}); // this may be superfluous if always in line mode for mazeWriter...UPDATE: turns out this is not superfluous it is needed when the end of a mazemaker line is not valid. (this happens less often because in order for the mazeWriter to have collision they need to keep drawing after the pathfinder has started and intersect one of their lines.)
-			}
-			sendLine('end');
-			firstPoint = {};//this cannot happen before sendLine() is called!
-			isMouseDown = false;
-		}
-	}
-
-	function setMode(mode) {
-		if(mazeWriter){
-			inputMode = mode;
-			alert('input mode has been set to'+ mode);
-		}
-		else{
-			alert('you are not the MazeMaker, No cheating! ')
-		}
-	}
-
-	// from quirksmode.org/js/findpos.html start
-	function findPos(obj) {
-		var curleft = curtop = 0;
-		if (obj.offsetParent) {
-			do {
-				curleft += obj.offsetLeft;
-				curtop += obj.offsetTop;
-			} while (obj = obj.offsetParent);
-		}
-		return {x:curleft,y:curtop};
-	}
-	// from quirksmode.org/js/findpos.html end
-
-	function getPoint() {
-			ev = window.event;
-			document.getElementById("mouseCoord").innerHTML = "Mouse X:"+ev.pageX + " Mouse Y:"+ev.pageY;
-			var canvas = document.getElementById('can');
-			var canvasOffSet = findPos(canvas); 
-
-			var x = ev.pageX - canvasOffSet.x;
-			var y = ev.pageY - canvasOffSet.y;
-			return {x:x, y:y};
-	}
-
-	function sendLine(end){
-		if(inGame){
-			var secondPoint = getPoint();
-			socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
-			//console.log({x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
-			//console.log(firstPoint,secondPoint);
-			//drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'purple'); // this should be commented out for now it lets you see the path that the mouse takes when out of bounds.
-		}
-	}
-}
-</script>
 </body>
+
 </html>

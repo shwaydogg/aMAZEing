@@ -2,7 +2,7 @@ body{
     background-color:navy;
     text-align:center;
     width:100%;
-    color:white;
+    color:black;
 }
 h1, .green{
     color:#76B347;
@@ -109,6 +109,20 @@ div#block4{
                                 -webkit-box-shadow: 0px -3px 5px 6px #000;
                                 box-shadow:         0px -3px 5px 6px #000;
 }
+div#timerBlock,
+div#collisionBlock{
+  position:absolute;
+  height:600px;
+  width:600px;
+  left:0;
+  top:0;
+  background-color:red;
+  color:black;
+  display:none;
+}
+div#timerBlock{
+  font-size:200px;
+}
 
 
 input#roomNameInput{
@@ -161,3 +175,39 @@ button{
 -webkit-appearance: button;
 vertial-align:none;
 }
+
+
+
+/*BEGIN: d3.js*/
+/*.chart div {
+    font: 10px sans-serif;
+    background-color: steelblue;
+    text-align: right;
+    padding: 3px;
+    margin: 1px;
+    color: white; 
+
+ }*/
+
+
+.chart {
+  /*shape-rendering: crispEdges;*/
+  font: 10px sans-serif;
+}
+.chart rect {
+   stroke: white;
+   fill: steelblue;
+}
+.chart text {
+  fill: black;
+}
+.chart text.rule {
+  fill: black;
+}
+.chart {
+  border-style:solid;
+  border-width:3px;
+  border-color:black;
+}
+
+ /*END: d3.js*/
