@@ -8,50 +8,45 @@ var chart;
 
 function d3Init(){  // Previously was d3Do
 
-
-console.log("d3Do");
-
-pointData = [20,20, 0]; //d3 data for points
+    pointData = [20,20, 0]; //d3 data for points
 
     w = 500,
     h = 400,
     scale = 1;//w / d3.max(pointData),
     rectHeight = h/ (pointData.length *2 );
 
+    chart = d3.select("body").append("svg")
+         .attr("width", 2*w)
+        .attr("height", h)
+         .attr("class", "chart");
 
 
-chart = d3.select("body").append("svg")
-     .attr("width", 2*w)
-    .attr("height", h)
-     .attr("class", "chart");
+    chart.selectAll("rect")
+         .data(pointData)
+       .enter().append("rect")
+         .attr("y", function(d,i) {
+                    return 2*i * rectHeight + rectHeight/2; })
+         .attr("x", rectX)
+         .attr("width", rectWidth)
+         .attr("height", rectHeight);
 
 
-chart.selectAll("rect")
-     .data(pointData)
-   .enter().append("rect")
-     .attr("y", function(d,i) {
-                return 2*i * rectHeight + rectHeight/2; })
-     .attr("x", rectX)
-     .attr("width", rectWidth)
-     .attr("height", rectHeight);
+    chart.selectAll("text")
+         .data(pointData)
+       .enter().append("text")
+         .attr("x", w)
+         .attr("y", function(d, i) { return 2 * i * rectHeight + rectHeight; })
+         .attr("dx", -3 )//function(x){ return x>0 ? -3 + w/2 : 20 + w/2; }) // padding-right
+         .attr("dy", ".35em") // vertical-align: middle
+         .attr("text-anchor", "end") // text-align: right
+         .text(String);
 
-
-chart.selectAll("text")
-     .data(pointData)
-   .enter().append("text")
-     .attr("x", w)
-     .attr("y", function(d, i) { return 2 * i * rectHeight + rectHeight; })
-     .attr("dx", -3 )//function(x){ return x>0 ? -3 + w/2 : 20 + w/2; }) // padding-right
-     .attr("dy", ".35em") // vertical-align: middle
-     .attr("text-anchor", "end") // text-align: right
-     .text(String);
-
- chart.append("line")
-    .attr("x1", w)
-     .attr("x2", w)
-     .attr("y1", 0)
-     .attr("y2", h )
-     .style("stroke", "#000");
+     chart.append("line")
+        .attr("x1", w)
+         .attr("x2", w)
+         .attr("y1", 0)
+         .attr("y2", h )
+         .style("stroke", "#000");
 }
 
 

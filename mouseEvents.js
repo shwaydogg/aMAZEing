@@ -7,6 +7,24 @@
 
 
 
+function addEvent(element,e,foo){
+	if ( element.addEventListener ) {
+		element.addEventListener( e, foo, false );
+	// If IE event model is used
+	}else if ( element.attachEvent ) {
+		element.attachEvent( e, foo );
+	}
+}
+
+function removeEvent(element,e,foo){
+	if ( element.removeEventListener ) {
+		element.removeEventListener( e, foo, false );
+	// If IE event model is used
+	}else if ( element.detachEvent ) {
+		element.detachEvent( e, foo );
+	}
+}
+
 	//make function for controls initialization
 	function initMouse(){
 		isMouseDown = false;
@@ -15,32 +33,29 @@
 		pathStarted = false;
 
 		var canvasElement = document.getElementById('canvas-container');
-		canvasElement.onmousedown=mouseDown;
-		document.onmouseup=mouseUp;
-		canvasElement.onmousemove=mouseMove;
 
-		document.getElementById("startingBlock").onmousedown=onStartingBlock;
-		document.getElementById("endBlock").onmousemove=onExit;
+		addEvent(canvasElement,"mousedown", mouseDown);
+		addEvent(document, "mouseup", mouseUp);
+		addEvent(canvasElement, "mousemove", mouseMove);
+
+
+		addEvent(document.getElementById("startingBlock"), "mousedown", onStartingBlock);
+		addEvent(document.getElementById("endBlock"), "mousemove", onExit);
+
 		inGame = true;
 	}
 
 	function deInitMouse(){
+
 		var canvasElement = document.getElementById('canvas-container');
 
-		delete canvasElement.onmousedown;
-		delete document.onmouseup;
-		delete canvasElement.onmousemove;
+		removeEvent(canvasElement,"mousedown", mouseDown);
+		removeEvent(document, "mouseup", mouseUp);
+		removeEvent(canvasElement, "mousemove", mouseMove);
 
-		delete document.getElementById("startingBlock").onmousedown;
-		delete document.getElementById("endBlock").onmousemove;
+		removeEvent(document.getElementById("startingBlock"), "mousedown", onStartingBlock);
+		removeEvent(document.getElementById("endBlock"), "mousemove", onExit);
 
-
-		canvasElement.onmousedown = null;
-		document.onmouseup = null;
-		canvasElement.onmousemove = null;
-
-		document.getElementById("startingBlock").onmousedown = null;
-		document.getElementById("endBlock").onmousemove = null;
 	}
 
 	
