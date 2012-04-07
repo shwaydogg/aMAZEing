@@ -159,7 +159,7 @@ function removeEvent(element,e,foo){
         if(inGame){
             var secondPoint = getPoint();
             //console.log("emitedline");
-                    console.log("sendline", {x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end, session:sessionNumber} );
+            //console.log("sendline", {x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end, session:sessionNumber} );
 
             socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end, session:sessionNumber});
             //console.log({x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
