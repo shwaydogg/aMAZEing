@@ -122,6 +122,12 @@ div#collisionBlock{
 }
 div#timerBlock{
   font-size:200px;
+  z-index: 999999;
+}
+
+div#timerdiv{
+  font-size:18px;
+  color:red;
 }
 
 

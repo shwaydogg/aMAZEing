@@ -3,9 +3,9 @@
 	<title>The aMAZEing Δing-Maze</title>
 	<link rel="stylesheet" type="text/css" href="main.css" media="all">
 	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
-	<script type="text/javascript" src="./mazeIO.js"></script>
 	<script type="text/javascript" src="./canvas.js"></script>
 	<script type="text/javascript" src="./mouseEvents.js"></script>
+	<script type="text/javascript" src="./mazeIO.js"></script>
 	<script type="text/javascript" src="./ui.js"></script>
 	<script type="text/javascript" src="./d3/d3.v2.js"></script>
 	<script type="text/javascript" src="./d3maze.js"></script>
@@ -22,7 +22,7 @@
 				onkeypress="searchKeyPress(event,'roomSumbitButton');" />
 		<button id="roomSumbitButton" class="punch" onclick="roomCheck()";> Enter Room </button>
 	</div>
-	<div>
+	<div id="timerdiv">
 		<span id="timerPhrase"></span>
 		<span id="timer"></span>
 		<span id="postTimerPhrase"></span>
@@ -31,11 +31,11 @@
 		<div id="canvas-container" class="shadow">
 			<canvas id="can" width="600" height="600"></canvas>
 			<div id="startingBlock">ENTER</div>
+			<div id="timerBlock"></div>
 			<div id="block1"></div>
 			<div id="block2"></div>
 			<div id="block3"></div>
 			<div id="block4"></div>
-			<div id="timerBlock"></div>
 			<div id="collisionBlock">
 				 No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking! No Peeking!  
 			

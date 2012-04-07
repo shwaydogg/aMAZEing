@@ -1,6 +1,6 @@
 //var socket = io.connect('http://amaze.nodester.com'); 
-var socket = io.connect('http://localhost');  //Uncomment this line to test locally!
-//var socket = io.connect('http://amazeing.herokuapp.com/'); 
+//var socket = io.connect('http://localhost');  //Uncomment this line to test locally!
+var socket = io.connect('http://amazeing.herokuapp.com/'); 
 //Globals:
 
 
@@ -9,6 +9,7 @@ var watchMode;
 var inGame;
 var gameTime;
 var pointData; //d3 data for points
+var sessionNumber = 0; //doesnot occur in initglobals
 
 initGlobals();
 
@@ -18,6 +19,8 @@ function initGlobals(){
   inGame = false;
   gameTime = 0;
   pointData = [20,20, 0]; //d3 data for points
+
+  initMouseGlobals();
 }
 
 socket.on('connect', function () {
@@ -33,7 +36,10 @@ socket.on('connect', function () {
     document.getElementById("roomInput").style.display="none";
   });
 
-  socket.on('startGameMazeWriter', function(room) {
+  socket.on('startGameMazeWriter', function(msgData) {
+    initGlobals();
+    sessionNumber = msgData.sessionNumber;
+    var room = msgData.room;
     console.log('INIT mazeWtriter');
     document.getElementById("inGame").style.display="inline";
     document.getElementById("roomInput").style.display="none";
@@ -41,14 +47,17 @@ socket.on('connect', function () {
     inGame = true;
     mazeWriter = true; // set the second player to join a game to be the maze writer, not the maze traverser
   initMouse();
-  document.getElementById("timerPhrase").innerHTML = '"You have ';
-  document.getElementById("postTimerPhrase").innerHTML = '"seconds before the your labrynth is entered';
+  document.getElementById("timerPhrase").innerHTML = 'You have ';
+  document.getElementById("postTimerPhrase").innerHTML = 'seconds before the your labrynth is entered';
 
   mazeWriteTimer(3000);
     document.getElementById("room-name").innerHTML="Get your Maze On, Δrchitect!<br/><i>You have two minutes to draw a maze that takes me one minute to solve.</i> <br/> You're in room: <span class='green'>" +room + "</span>";
   });
 
-  socket.on('startGamePathFinder', function(room) {
+  socket.on('startGamePathFinder', function(msgData) {
+    initGlobals();
+    sessionNumber = msgData.sessionNumber;
+    var room = msgData.room;
     console.log('INIT pathfinder');
     document.getElementById("inGame").style.display="inline";
     document.getElementById("roomInput").style.display="none";
@@ -62,6 +71,8 @@ socket.on('connect', function () {
     
     document.getElementById("timer").style.display= "none";
     document.getElementById("canvas-container").style.cursor='none';
+    document.getElementById("block1").style.width='600';
+    document.getElementById("block1").style.height='600';
     document.getElementById("room-name").innerHTML="Light the way...PathFinder!<br/>  You are in room: <span class='green'>" +room + "</span>";
   old_xy = [];
   });
@@ -74,7 +85,7 @@ socket.on('connect', function () {
   socket.on('disconnect',function(){
     inGame=false;
     alert('The server disconnected.  Refresh the page to start a new game.');
-  };
+  });
 
   //server disconnect
   socket.on('drawLine',function(coord) {
@@ -91,7 +102,7 @@ socket.on('connect', function () {
   });
 
   socket.on('collision',function(line) {
-    if(!mazeWriter){
+    if(!mazeWriter && !watchMode){
     document.getElementById("collisionBlock").style.display = 'inline';
     }
   });
@@ -108,8 +119,11 @@ socket.on('connect', function () {
 // }
 
   socket.on('mazeComplete',function() {
-    initGlobals;
     deInitMouse();
+
+
+    document.getElementById("canvas-container").style.cursor='default';
+
 
     if(!mazeWriter && !watchMode ){
       alert('You finished the maze, congrats!');    
@@ -122,7 +136,8 @@ socket.on('connect', function () {
    document.getElementById("block4").style.width  = 0;
   });
 
-  socket.on('watchMode', function(){
+  socket.on('watchMode', function(msgData){
+    sessionNumber = msgData.sessionNumber;
     console.log('INIT watcher');
     clearCanvas();
     watchMode = true;

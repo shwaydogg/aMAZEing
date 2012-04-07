@@ -76,6 +76,7 @@
         this.trailPath = [];
         this.room = room; //socket.io room
         this.session = 0;
+        this.inSession = true;//if inSession is false we will ignore sendline. This will occur when we change players after the pathfinder escapes the maze.
 
         player1.game = this;
         player2.game = this;
@@ -96,72 +97,101 @@
 
     }
 
-    GameRoom.prototype.initSession = function(pathFinder,dualPlay){
+    GameRoom.prototype.initSession = function(pathFinder,twoPlayer){
 
         this.player1.points =  0;
         this.player2.points =  0;
-        this.mazePath = [];
         this.trailPath = [];
-        this.gameOver = false;
+        this.inSession = true;
 
         var thisGameRoom = this;
 
         setTimeout(
-            function(){
+            function (){
                     console.log("initSession");
-                    if(pathFinder == 2){
+                    if (pathFinder == 2){
                         //console.log(thisGameRoom);
                         thisGameRoom.player1.mazeWriter = true;
                         thisGameRoom.player2.mazeWriter = false;
-                        thisGameRoom.player2.socket.emit('startGamePathFinder', thisGameRoom.room);
-                        if(dualPlay){
-                            thisGameRoom.player1.socket.emit('startGameMazeWriter', thisGameRoom.room);
-                        }
-                        else{
-                            thisGameRoom.player1.socket.emit('watchMode', thisGameRoom.room);
-                        }
+                        thisGameRoom.player2.socket.emit('startGamePathFinder',
+                            {sessionNumber:thisGameRoom.session, room:thisGameRoom.room});
+                        thisGameRoom.dualPlay(thisGameRoom.player1 ,twoPlayer);
                     }
                     else{
                         thisGameRoom.player2.mazeWriter = true;
                         thisGameRoom.player1.mazeWriter = false;
-                        thisGameRoom.player1.socket.emit('startGamePathFinder', thisGameRoom.room);
-                        if(dualPlay){
-                            thisGameRoom.player2.socket.emit('startGameMazeWriter', thisGameRoom.room);
-                        }
-                        else{
-                            thisGameRoom.player2.socket.emit('watchMode', thisGameRoom.room);
-                        }
+                        thisGameRoom.player1.socket.emit('startGamePathFinder',
+                            {sessionNumber:thisGameRoom.session, room:thisGameRoom.room});
+                        thisGameRoom.dualPlay(thisGameRoom.player2, twoPlayer);
                     }
-                },1000);
+                },0);
     };
+
+    GameRoom.prototype.dualPlay = function (player, twoPlayer){
+        //if it is a twoplayer game we clear the current maze.
+        if (twoPlayer){
+            this.mazePath = [];
+            player.socket.emit('startGameMazeWriter',
+                {sessionNumber:this.session, room:this.room});
+        }
+        //if it is a single player game we draw the current maze
+        else{
+            player.socket.emit('watchMode', this.room);
+            this.drawState();
+        }
+    };
+
+    GameRoom.prototype.drawState = function (){
+        //to be implemented
+        this.drawPath(this.trailPath);
+        this.drawPath(this.mazePath);
+    };
+
+    GameRoom.prototype. drawPath = function (path){
+        for(var i = 0; i< path.length-1; i++){
+            if(!path[i].end){
+                io.sockets.in(this.room).emit('drawMazeLine',{
+                                        x1:path[i].x,
+                                        y1:path[i].y,
+                                        x2:path[i+1].x,
+                                        y2:path[i+1].y
+                                                            });
+            }
+        }
+    };
+
 
     GameRoom.prototype.endSession = function(){
         this.points1.push(this.player1.points);
         this.points2.push(this.player2.points);
+        this.player1.lastValidPoint = null;
+        this.player2.lastValidPoint = null;
         //inorder to do these saves need to write a copy function for arrays not going to deal with that now.
             // this.game1.mazePath = this.mazePath;
             // this.game1.trialPath = this.trailPath;
 
-        if(this.session === 0){
+        this.session++;
+
+        if(this.session == 1){
             //player1 is going to go through the maze that player1 made
             this.initSession(1,false);
         }
-        else if(this.session == 1 ){
+        else if(this.session == 2 ){
             //Player2 is now the mazeWriter and player 1 will traverse the maze
             this.initSession(1, true);
         }
-        else if(this.session == 2 ){
+        else if(this.session == 3 ){
             //player2 is going to go through the maze that player2 made
             this.initSession(2, false);
         }
-        else if(this.session == 3){
+        else if(this.session == 4){
             //the game is actually over.  Everybody cleanup
             this.deleteGame;
         }
         else{
             console.log("ERROR THIS SHOULD NOT BE REACHED");
         }
-        this.session++;
+        
     };
 
 
@@ -172,7 +202,7 @@
             delete this.player1;
             delete this.player2;
             delete this.room;
-    }
+    };
 
 
 
@@ -202,7 +232,7 @@
             }
             else if( games[game].player2.socket == socket){
                 return games[game].player2;
-            }   
+            }
         }
         for( var game in gameQueue ){
             if( gameQueue[game].socket == socket){
@@ -287,7 +317,7 @@ io.sockets.on('connection', function (socket) {
         player.lastValidPoint = null;
 
         var path = playerPath(player);
-        if(path && path.length<=0){
+        if(path && path.length<0){
             path[ path.length-1 ].end = true;
         }
     });
@@ -297,14 +327,16 @@ io.sockets.on('connection', function (socket) {
         var pointB = {x:msgData.x2,y:msgData.y2};
         var path = playerPath(player);
         var collisionPath = playerPath(player.otherPlayer);
+        var session = msgData.session;
+        var sessionOver = false;
 
-        if(player && player.room){
+        console.log("this session", player.game.session, "session", session);
+
+        if(player && player.room && player.game.inSession && player.game.session == session ){
             var pointA = player.lastValidPoint || {x:msgData.x1,y:msgData.y1};
-            console.log("pointa:",pointA);
             if (collision.lineCollide(pointA, pointB, collisionPath)) {
                 io.sockets.in(player.room).emit('collision');
                 player.addPoint(-1);
-                
             }else{
                 if(player.mazeWriter){
                     player.otherPlayer.addPoint();
@@ -319,22 +351,23 @@ io.sockets.on('connection', function (socket) {
                 else{
                     io.sockets.in(player.room).emit('drawPathLine',msgData);
                     player.addPoint(-1);
-                    if(checkDone(pointB) && !player.game.gameOver){
-                        player.game.gameOver = true;
-                        player.game.endSession(); //ends the minigame (session)
+                    if(checkDone(pointB) && player.game.inSession){
+                        player.room.inSession = false;
                         io.sockets.in(player.room).emit('mazeComplete');
+                        player.game.endSession(); //ends the minigame (session)
                         player.addPoint(1000);
+                        sessionOver = true;
                     }
                 }
 
-                //assignment of lastValidPoint needs to happent after sending lines to client.
-                if(msgData.end){
+                //assignment of lastValidPoint needs to happen after sending lines to client.
+                if (msgData.end){
                     pointB.end = true;
                     player.lastValidPoint = null;
-                }else{
+                }else if(!sessionOver){
                     player.lastValidPoint = pointB;
                 }
-                if( path.length === 0 || path[ path.length-1 ].end){
+                if (path.length === 0 || path[ path.length-1 ].end){
                     path.push(pointA);
                 }
                 path.push(pointB);

@@ -1,10 +1,16 @@
 //Mouse Events and Sending Lines: BEGIN
 
-    var isMouseDown = false;
-    var inputMode = mazeWriter? 'line' : 'drag'; //'drag'||'line'
-    var firstPoint = {};
-    var pathStarted = false;
+    var isMouseDown;
+    var inputMode;
+    var firstPoint;
+    var pathStarted;
 
+function initMouseGlobals (){
+    isMouseDown = false;
+    inputMode = mazeWriter? 'line' : 'drag'; //'drag'||'line'
+    firstPoint = {};
+    pathStarted = false;
+}
 
 
 function addEvent(element,e,foo){
@@ -149,12 +155,13 @@ function removeEvent(element,e,foo){
             return {x:x, y:y};
     }
 
-    function sendLine(end){
-        //console.log("sendline");
+    function sendLine (end){
         if(inGame){
             var secondPoint = getPoint();
             //console.log("emitedline");
-            socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
+                    console.log("sendline", {x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end, session:sessionNumber} );
+
+            socket.emit('sendLine',{x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end, session:sessionNumber});
             //console.log({x1:firstPoint.x, y1:firstPoint.y, x2: secondPoint.x, y2:secondPoint.y, n:name, end:end});
             //console.log(firstPoint,secondPoint);
             //drawLine(firstPoint.x,firstPoint.y,secondPoint.x,secondPoint.y,'purple'); // this should be commented out for now it lets you see the path that the mouse takes when out of bounds.
