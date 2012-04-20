@@ -2,7 +2,7 @@
   "name": "maze",
   "version": "0.0.1",
   "dependencies": {
-    "express": "*",
+    "express": "2.9.5",
     "socket.io": "0.9.0"
   },
   "contributors": [ 

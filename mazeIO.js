@@ -1,6 +1,6 @@
 //var socket = io.connect('http://amaze.nodester.com'); 
-//var socket = io.connect('http://localhost');  //Uncomment this line to test locally!
-var socket = io.connect('http://amazeing.herokuapp.com/'); 
+var socket = io.connect('http://localhost');  //Uncomment this line to test locally!
+//var socket = io.connect('http://amazeing.herokuapp.com/'); 
 //Globals:
 
 
@@ -70,6 +70,7 @@ socket.on('connect', function () {
     mazeWriteTimer(3000);
     
     document.getElementById("timer").style.display= "none";
+    document.getElementById("collisionBlock").style.display= "inline";
     document.getElementById("canvas-container").style.cursor='none';
     document.getElementById("block1").style.width='600';
     document.getElementById("block1").style.height='600';
@@ -143,6 +144,9 @@ socket.on('connect', function () {
     watchMode = true;
   });
 
+  socket.on('winner',function(){
+    //TO DO: Implement
+  });
 });
 
 function mazeWriteTimer(time){

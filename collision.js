@@ -117,12 +117,12 @@
 //END: export
 
 //BEGIN: For mocha Tests
- //   exports.slope = slope;
-//   exports.yIntercept = yIntercept;
-//    exports.lineCollide = lineCollide;
-//    exports.boeIntersect = boeIntersect;
- //   exports.pointOnLine = pointOnLine;
- //   exports.pointOnLineSeg = pointOnLineSeg;
- //   exports.getLineSpecs = getLineSpecs;
- //   exports.counterClockwise = counterClockwise;
+  exports.slope = slope;
+  exports.yIntercept = yIntercept;
+  exports.lineCollide = lineCollide;
+  exports.boeIntersect = boeIntersect;
+  exports.pointOnLine = pointOnLine;
+  exports.pointOnLineSeg = pointOnLineSeg;
+  exports.getLineSpecs = getLineSpecs;
+  exports.counterClockwise = counterClockwise;
 //END: For mocha tests

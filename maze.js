@@ -186,6 +186,13 @@
         }
         else if(this.session == 4){
             //the game is actually over.  Everybody cleanup
+            if (this.player1.points > this.player2.points){
+                this.player1.socket.emit("winner");
+                this.player2.socket.emit("loser");
+            }else{
+                this.player2.socket.emit("winner");
+                this.player1.socket.emit("loser");
+            }
             this.deleteGame;
         }
         else{

@@ -2,7 +2,7 @@ body{
     background-color:navy;
     text-align:center;
     width:100%;
-    color:black;
+    color:white;
 }
 h1, .green{
     color:#76B347;
@@ -75,7 +75,9 @@ canvas#can{
 
 }
 
-
+ol {
+  list-style-type: none; 
+}
 
 div#block1{
     height:0px; width:600px; background:black; z-index:999998; position:absolute; 

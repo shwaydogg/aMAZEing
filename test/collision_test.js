@@ -1,4 +1,4 @@
-var mouse = require('./../mouse');
+var mouse = require('./../collision');
 
 describe('collision', function(){
 
